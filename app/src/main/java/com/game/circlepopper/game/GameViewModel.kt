@@ -26,6 +26,7 @@ class GameViewModel : ViewModel() {
     private var screenWidth = 0f
     private var screenHeight = 0f
     private var nextId = 0L
+    private var gameStartTime = 0L
     private var gameLoopJob: Job? = null
 
     private val brightColors = listOf(
@@ -45,7 +46,8 @@ class GameViewModel : ViewModel() {
         screenWidth = widthPx
         screenHeight = heightPx
         nextId = 0L
-        _state.value = GameState(isPlaying = true)
+        gameStartTime = System.currentTimeMillis()
+        _state.value = GameState(isPlaying = true, gameStartTime = gameStartTime)
         gameLoopJob?.cancel()
         gameLoopJob = viewModelScope.launch {
             launch { spawnLoop() }
@@ -84,6 +86,11 @@ class GameViewModel : ViewModel() {
         val vx = cos(angle) * speed
         val vy = sin(angle) * speed
 
+        val gravAngle = Random.nextFloat() * 2f * PI.toFloat()
+        val gravStrength = Random.nextFloat() * 0.00028f + 0.00012f
+        val ax = cos(gravAngle) * gravStrength
+        val ay = sin(gravAngle) * gravStrength
+
         val color = brightColors.random()
 
         val circle = GameCircle(
@@ -92,6 +99,8 @@ class GameViewModel : ViewModel() {
             centerY = y.coerceIn(radius, screenHeight - radius),
             velocityX = vx,
             velocityY = vy,
+            accelX = ax,
+            accelY = ay,
             radius = radius,
             color = color,
             createdAt = System.currentTimeMillis()
@@ -156,16 +165,22 @@ class GameViewModel : ViewModel() {
         }
     }
 
+    private fun gravityMultiplier(): Float {
+        val elapsed = System.currentTimeMillis() - gameStartTime
+        return minOf(5f, 1f + elapsed / 1000f * 0.05f)
+    }
+
     private fun updatePositions(dtMs: Long) {
         _state.update { state ->
             if (state.circles.isEmpty()) return@update state
             val dt = dtMs.toFloat()
+            val gravMul = gravityMultiplier()
             state.copy(
                 circles = state.circles.map { circle ->
-                    var newX = circle.centerX + circle.velocityX * dt
-                    var newY = circle.centerY + circle.velocityY * dt
-                    var vx = circle.velocityX
-                    var vy = circle.velocityY
+                    var vx = circle.velocityX + circle.accelX * gravMul * dt
+                    var vy = circle.velocityY + circle.accelY * gravMul * dt
+                    var newX = circle.centerX + vx * dt
+                    var newY = circle.centerY + vy * dt
 
                     if (newX - circle.radius < 0f) {
                         newX = circle.radius

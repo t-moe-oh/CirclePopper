@@ -197,7 +197,27 @@ private fun GameScreen(state: GameState, onTap: (Float, Float) -> Unit) {
         }
 
         HUD(score = state.score, misses = state.misses)
+        TimerDisplay(
+            gameStartTime = state.gameStartTime,
+            currentTime = frameTimeMs,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
     }
+}
+
+@Composable
+private fun TimerDisplay(gameStartTime: Long, currentTime: Long, modifier: Modifier = Modifier) {
+    val elapsed = (currentTime - gameStartTime) / 1000
+    val minutes = elapsed / 60
+    val seconds = elapsed % 60
+    Text(
+        text = "%02d:%02d".format(minutes, seconds),
+        modifier = modifier.fillMaxWidth().padding(bottom = 24.dp),
+        textAlign = TextAlign.Center,
+        fontSize = 22.sp,
+        fontWeight = FontWeight.Bold,
+        color = Color.White
+    )
 }
 
 @Composable

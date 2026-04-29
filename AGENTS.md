@@ -29,9 +29,10 @@ app/src/main/java/com/game/circlepopper/
 **State management:** MVVM — `GameViewModel` exposes `StateFlow<GameState>`, UI collects via `collectAsState()`.
 
 **GameCircle fields** (immutable data class):
-`id, centerX, centerY, velocityX, velocityY, radius, color, createdAt`
+`id, centerX, centerY, velocityX, velocityY, accelX, accelY, radius, color, createdAt`
 
 - `velocityX/Y` in **px/ms** (frame-rate independent)
+- `accelX/Y` in **px/ms²** — per-circle gravity, applied as `v += a * dt` each frame
 - `createdAt` = `System.currentTimeMillis()` (epoch-based)
 
 **ViewModel runs 3 parallel coroutine loops** inside a parent job:
@@ -46,7 +47,7 @@ All loops check `currentCoroutineContext().isActive` and are cancelled via `game
 
 ## Game mechanics
 
-- **Spawn:** Random position (inset by radius), random angle `[0, 2π)`, speed `0.08–0.35` px/ms, radius `5–25%` of smaller screen dimension
+- **Spawn:** Random position (inset by radius), random angle `[0, 2π)`, speed `0.08–0.35` px/ms, radius `5–25%` of smaller screen dimension, random per-circle gravity `0.00012–0.00040` px/ms² in random direction, scaled by `min(5, 1 + elapsed_seconds × 0.05)`
 - **Lifetime:** 4s. After 2.5s → blink (alpha oscillation 0.2–1.0 at 4Hz via `sin(phase * 8π)`)
 - **Wall bounce:** Reflect velocity component, clamp center to `[radius, dim - radius]`
 - **Hit detection:** Euclidean distance from tap to circle center ≤ radius

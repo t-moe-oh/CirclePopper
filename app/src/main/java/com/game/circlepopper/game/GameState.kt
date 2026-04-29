@@ -8,6 +8,8 @@ data class GameCircle(
     val centerY: Float,
     val velocityX: Float,
     val velocityY: Float,
+    val accelX: Float,
+    val accelY: Float,
     val radius: Float,
     val color: Color,
     val createdAt: Long
@@ -17,6 +19,7 @@ data class GameState(
     val circles: List<GameCircle> = emptyList(),
     val score: Int = 0,
     val misses: Int = 0,
+    val gameStartTime: Long = 0L,
     val isGameOver: Boolean = false,
     val isPlaying: Boolean = false
 )
