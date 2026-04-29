@@ -30,6 +30,15 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     private var nextId = 0L
     private var gameStartTime = 0L
     private var gameLoopJob: Job? = null
+    private var tiltX = 0f
+    private var tiltY = 0f
+
+    private val realGravityScale = 0.0012f
+
+    fun setTilt(x: Float, y: Float) {
+        tiltX = x
+        tiltY = y
+    }
 
     private val highscoreManager = HighscoreManager(application)
 
@@ -203,10 +212,12 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             if (state.circles.isEmpty()) return@update state
             val dt = dtMs.toFloat()
             val gravMul = gravityMultiplier()
+            val realGravX = -tiltX * realGravityScale
+            val realGravY = tiltY * realGravityScale
             state.copy(
                 circles = state.circles.map { circle ->
-                    var vx = circle.velocityX + circle.accelX * gravMul * dt
-                    var vy = circle.velocityY + circle.accelY * gravMul * dt
+                    var vx = circle.velocityX + (circle.accelX * gravMul + realGravX) * dt
+                    var vy = circle.velocityY + (circle.accelY * gravMul + realGravY) * dt
                     var newX = circle.centerX + vx * dt
                     var newY = circle.centerY + vy * dt
 
