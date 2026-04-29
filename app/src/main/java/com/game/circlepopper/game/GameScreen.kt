@@ -16,14 +16,19 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
@@ -36,6 +41,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -55,9 +61,17 @@ fun CirclePopperApp(viewModel: GameViewModel = viewModel()) {
         val heightPx = with(density) { maxHeight.toPx() }
 
         when {
+            state.showHighscoreList -> {
+                HighscoreListScreen(
+                    highscores = state.highscores,
+                    onBack = viewModel::hideHighscoreList
+                )
+            }
+
             !state.isPlaying && !state.isGameOver -> {
                 MenuScreen(
                     onStart = { viewModel.startGame(widthPx, heightPx) },
+                    onHighscores = viewModel::showHighscoreList,
                     onQuit = { (context as? Activity)?.finish() }
                 )
             }
@@ -65,6 +79,10 @@ fun CirclePopperApp(viewModel: GameViewModel = viewModel()) {
             state.isGameOver -> {
                 GameOverScreen(
                     score = state.score,
+                    highscores = state.highscores,
+                    isQualifying = state.isHighscoreQualifying,
+                    highscoreSaved = state.highscoreSaved,
+                    onSaveHighscore = viewModel::saveHighscore,
                     onPlayAgain = { viewModel.startGame(widthPx, heightPx) },
                     onMenu = { viewModel.resetGame() }
                 )
@@ -81,7 +99,7 @@ fun CirclePopperApp(viewModel: GameViewModel = viewModel()) {
 }
 
 @Composable
-private fun MenuScreen(onStart: () -> Unit, onQuit: () -> Unit) {
+private fun MenuScreen(onStart: () -> Unit, onHighscores: () -> Unit, onQuit: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -119,6 +137,25 @@ private fun MenuScreen(onStart: () -> Unit, onQuit: () -> Unit) {
             ) {
                 Text(
                     text = "START GAME",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                onClick = onHighscores,
+                modifier = Modifier
+                    .width(220.dp)
+                    .height(56.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF0F3460)
+                )
+            ) {
+                Text(
+                    text = "HIGHSCORES",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -206,21 +243,6 @@ private fun GameScreen(state: GameState, onTap: (Float, Float) -> Unit) {
 }
 
 @Composable
-private fun TimerDisplay(gameStartTime: Long, currentTime: Long, modifier: Modifier = Modifier) {
-    val elapsed = (currentTime - gameStartTime) / 1000
-    val minutes = elapsed / 60
-    val seconds = elapsed % 60
-    Text(
-        text = "%02d:%02d".format(minutes, seconds),
-        modifier = modifier.fillMaxWidth().padding(bottom = 24.dp),
-        textAlign = TextAlign.Center,
-        fontSize = 22.sp,
-        fontWeight = FontWeight.Bold,
-        color = Color.White
-    )
-}
-
-@Composable
 private fun HUD(score: Int, misses: Int) {
     Row(
         modifier = Modifier
@@ -244,7 +266,30 @@ private fun HUD(score: Int, misses: Int) {
 }
 
 @Composable
-private fun GameOverScreen(score: Int, onPlayAgain: () -> Unit, onMenu: () -> Unit) {
+private fun TimerDisplay(gameStartTime: Long, currentTime: Long, modifier: Modifier = Modifier) {
+    val elapsed = (currentTime - gameStartTime) / 1000
+    val minutes = elapsed / 60
+    val seconds = elapsed % 60
+    Text(
+        text = "%02d:%02d".format(minutes, seconds),
+        modifier = modifier.fillMaxWidth().padding(bottom = 24.dp),
+        textAlign = TextAlign.Center,
+        fontSize = 22.sp,
+        fontWeight = FontWeight.Bold,
+        color = Color.White
+    )
+}
+
+@Composable
+private fun GameOverScreen(
+    score: Int,
+    highscores: List<Highscore>,
+    isQualifying: Boolean,
+    highscoreSaved: Boolean,
+    onSaveHighscore: (String) -> Unit,
+    onPlayAgain: () -> Unit,
+    onMenu: () -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -276,7 +321,17 @@ private fun GameOverScreen(score: Int, onPlayAgain: () -> Unit, onMenu: () -> Un
                 color = Color(0xFF33FF57)
             )
 
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(32.dp))
+
+            if (isQualifying && !highscoreSaved) {
+                HighscoreEntry(onSave = onSaveHighscore)
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            if (highscoreSaved) {
+                HighscoreTable(highscores = highscores, highlightScore = score)
+                Spacer(modifier = Modifier.height(24.dp))
+            }
 
             Button(
                 onClick = onPlayAgain,
@@ -311,6 +366,153 @@ private fun GameOverScreen(score: Int, onPlayAgain: () -> Unit, onMenu: () -> Un
                     text = "MAIN MENU",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun HighscoreEntry(onSave: (String) -> Unit) {
+    var name by remember { mutableStateOf("") }
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            text = "New Highscore!",
+            fontSize = 22.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFFFFD733)
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        OutlinedTextField(
+            value = name,
+            onValueChange = { if (it.length <= 12) name = it },
+            label = { Text("Enter your name") },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(
+                onDone = { if (name.isNotBlank()) onSave(name.trim()) }
+            ),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White,
+                cursorColor = Color(0xFFE94560),
+                focusedBorderColor = Color(0xFFE94560),
+                unfocusedBorderColor = Color(0xFF8A8AB5),
+                focusedLabelColor = Color(0xFFE94560),
+                unfocusedLabelColor = Color(0xFF8A8AB5),
+            ),
+            modifier = Modifier.width(260.dp)
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Button(
+            onClick = { if (name.isNotBlank()) onSave(name.trim()) },
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFFFFD733)
+            )
+        ) {
+            Text(
+                text = "SAVE",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF1A1A2E)
+            )
+        }
+    }
+}
+
+@Composable
+private fun HighscoreListScreen(highscores: List<Highscore>, onBack: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF1A1A2E)),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = "Highscores",
+                fontSize = 42.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFFE94560)
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            if (highscores.isEmpty()) {
+                Text(
+                    text = "No scores yet!",
+                    fontSize = 18.sp,
+                    color = Color(0xFF8A8AB5)
+                )
+            } else {
+                HighscoreTable(highscores = highscores, highlightScore = null)
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Button(
+                onClick = onBack,
+                modifier = Modifier
+                    .width(220.dp)
+                    .height(56.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFE94560)
+                )
+            ) {
+                Text(
+                    text = "BACK",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun HighscoreTable(highscores: List<Highscore>, highlightScore: Int?) {
+    Column(
+        modifier = Modifier.width(280.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        highscores.forEachIndexed { index, highscore ->
+            val isHighlighted = highscore.score == highlightScore
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        if (isHighlighted) Color(0xFF0F3460) else Color.Transparent,
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "${index + 1}.",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF8A8AB5)
+                )
+                Text(
+                    text = highscore.name,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (isHighlighted) Color(0xFFFFD733) else Color.White,
+                    modifier = Modifier.weight(1f).padding(start = 12.dp)
+                )
+                Text(
+                    text = "${highscore.score}",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (isHighlighted) Color(0xFFFFD733) else Color(0xFF33FF57)
                 )
             }
         }

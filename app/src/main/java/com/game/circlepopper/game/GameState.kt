@@ -20,6 +20,10 @@ data class GameState(
     val score: Int = 0,
     val misses: Int = 0,
     val gameStartTime: Long = 0L,
+    val highscores: List<Highscore> = emptyList(),
+    val isHighscoreQualifying: Boolean = false,
+    val highscoreSaved: Boolean = false,
+    val showHighscoreList: Boolean = false,
     val isGameOver: Boolean = false,
     val isPlaying: Boolean = false
 )

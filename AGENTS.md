@@ -53,6 +53,7 @@ All loops check `currentCoroutineContext().isActive` and are cancelled via `game
 - **Hit detection:** Euclidean distance from tap to circle center ≤ radius
 - **Difficulty:** spawn interval = `max(400ms, 1500ms - score × 30)`
 - **Misses:** 5 → game over
+- **Highscores:** Top 5 persisted via SharedPreferences (JSON-like `name|score;` format). `HighscoreManager` checks qualifying, inserts sorted, trims to 5. UI has dedicated list screen and name entry on game over.
 
 ## Canvas + animation
 

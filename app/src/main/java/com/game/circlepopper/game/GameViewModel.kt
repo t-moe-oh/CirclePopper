@@ -1,15 +1,16 @@
 package com.game.circlepopper.game
 
+import android.app.Application
 import androidx.compose.ui.graphics.Color
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.math.PI
@@ -18,7 +19,7 @@ import kotlin.math.min
 import kotlin.math.sin
 import kotlin.random.Random
 
-class GameViewModel : ViewModel() {
+class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _state = MutableStateFlow(GameState())
     val state: StateFlow<GameState> = _state.asStateFlow()
@@ -28,6 +29,8 @@ class GameViewModel : ViewModel() {
     private var nextId = 0L
     private var gameStartTime = 0L
     private var gameLoopJob: Job? = null
+
+    private val highscoreManager = HighscoreManager(application)
 
     private val brightColors = listOf(
         Color(0xFFFF5733),
@@ -121,17 +124,38 @@ class GameViewModel : ViewModel() {
         _state.update { state ->
             val newMisses = state.misses + expired.size
             val gameOver = newMisses >= 5
+            val highscores = if (gameOver) highscoreManager.getHighscores() else emptyList()
+            val isQualifying = if (gameOver) highscoreManager.isQualifying(state.score) else false
             state.copy(
                 circles = state.circles.filter { now - it.createdAt <= 4000L },
                 misses = newMisses,
                 isGameOver = gameOver,
-                isPlaying = if (gameOver) false else state.isPlaying
+                isPlaying = if (gameOver) false else state.isPlaying,
+                highscores = highscores,
+                isHighscoreQualifying = isQualifying
             )
         }
 
         if (_state.value.isGameOver) {
             gameLoopJob?.cancel()
         }
+    }
+
+    fun saveHighscore(name: String) {
+        val score = _state.value.score
+        val updated = highscoreManager.addHighscore(name, score)
+        _state.update {
+            it.copy(highscores = updated, highscoreSaved = true)
+        }
+    }
+
+    fun showHighscoreList() {
+        val highscores = highscoreManager.getHighscores()
+        _state.update { it.copy(showHighscoreList = true, highscores = highscores) }
+    }
+
+    fun hideHighscoreList() {
+        _state.update { it.copy(showHighscoreList = false) }
     }
 
     fun onTap(x: Float, y: Float) {
