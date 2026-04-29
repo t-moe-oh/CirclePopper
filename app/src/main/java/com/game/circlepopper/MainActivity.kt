@@ -2,6 +2,8 @@ package com.game.circlepopper
 
 import android.os.Build
 import android.os.Bundle
+import android.os.Vibrator
+import android.os.VibratorManager
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowInsetsController
@@ -11,12 +13,23 @@ import androidx.activity.enableEdgeToEdge
 import com.game.circlepopper.game.CirclePopperApp
 
 class MainActivity : ComponentActivity() {
+
+    private val vibrator: Vibrator by lazy {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val vm = getSystemService(VibratorManager::class.java)!!
+            vm.defaultVibrator
+        } else {
+            @Suppress("DEPRECATION")
+            getSystemService(Vibrator::class.java)!!
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         hideSystemBars()
         setContent {
-            CirclePopperApp()
+            CirclePopperApp(vibrator = vibrator)
         }
     }
 

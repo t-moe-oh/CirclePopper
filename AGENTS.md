@@ -79,3 +79,4 @@ Platform `android-37` is installed as `android-37.0` (source.properties reports 
 - **Screen orientation:** locked to portrait in manifest
 - **Immutability:** GameState and GameCircle are immutable data classes; all mutations go through `_state.update {}`
 - **No comments** in source code
+- **No git commits without explicit instruction** — stage or create commits only when the user says "commit"

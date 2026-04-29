@@ -1,6 +1,10 @@
 package com.game.circlepopper.game
 
 import android.app.Application
+import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.util.Log
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -22,6 +26,10 @@ import kotlin.random.Random
 
 class GameViewModel(application: Application) : AndroidViewModel(application) {
 
+    companion object {
+        private const val TAG = "CirclePopper"
+    }
+
     private val _state = MutableStateFlow(GameState())
     val state: StateFlow<GameState> = _state.asStateFlow()
 
@@ -41,6 +49,11 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private val highscoreManager = HighscoreManager(application)
+    private var vibrator: Vibrator? = null
+
+    fun setVibrator(vib: Vibrator) {
+        vibrator = vib
+    }
 
     private val brightColors = listOf(
         Color(0xFFFF5733),
@@ -133,6 +146,8 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         val now = System.currentTimeMillis()
         val expired = _state.value.circles.filter { now - it.createdAt > 4000L }
         if (expired.isEmpty()) return
+        Log.d(TAG, "expired=${expired.size}, misses=${_state.value.misses + expired.size}")
+        vibrate()
 
         _state.update { state ->
             val newMisses = state.misses + expired.size
@@ -245,6 +260,16 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                     )
                 }
             )
+        }
+    }
+
+    private fun vibrate() {
+        val vib = vibrator ?: return
+        Log.d(TAG, "vibrate() called")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vib.vibrate(VibrationEffect.createOneShot(500L, VibrationEffect.DEFAULT_AMPLITUDE))
+        } else {
+            vib.vibrate(500L)
         }
     }
 

@@ -6,6 +6,7 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.os.Vibrator
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -57,10 +58,14 @@ import kotlin.math.sin
 import kotlinx.coroutines.isActive
 
 @Composable
-fun CirclePopperApp(viewModel: GameViewModel = viewModel()) {
+fun CirclePopperApp(viewModel: GameViewModel = viewModel(), vibrator: Vibrator) {
     val state by viewModel.state.collectAsState()
 
     val context = LocalContext.current
+
+    LaunchedEffect(vibrator) {
+        viewModel.setVibrator(vibrator)
+    }
 
     DisposableEffect(context) {
         val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
