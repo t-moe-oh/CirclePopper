@@ -15,6 +15,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.math.PI
 import kotlin.math.cos
+import kotlin.math.exp
 import kotlin.math.min
 import kotlin.math.sin
 import kotlin.random.Random
@@ -84,8 +85,11 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         val x = Random.nextFloat() * (screenWidth - 2 * radius) + radius
         val y = Random.nextFloat() * (screenHeight - 2 * radius) + radius
 
+        val score = _state.value.score
+        val baseSpeed = Random.nextFloat() * 0.27f + 0.08f
+        val speedBoost = 0.35f * (1f - exp(-score / 20f))
+        val speed = baseSpeed + speedBoost
         val angle = Random.nextFloat() * 2f * PI.toFloat()
-        val speed = Random.nextFloat() * 0.27f + 0.08f
         val vx = cos(angle) * speed
         val vy = sin(angle) * speed
 
@@ -113,7 +117,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun spawnInterval(): Long {
         val score = _state.value.score
-        return maxOf(400L, 1500L - score * 30L)
+        return (400f + 1100f * exp(-score / 15f)).toLong().coerceAtLeast(400L)
     }
 
     private fun cleanupExpiredCircles() {
