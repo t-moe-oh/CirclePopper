@@ -11,6 +11,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.game.circlepopper.game.CirclePopperApp
+import com.game.circlepopper.game.SoundManager
 
 class MainActivity : ComponentActivity() {
 
@@ -24,12 +25,14 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private val soundManager by lazy { SoundManager(this) }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         hideSystemBars()
         setContent {
-            CirclePopperApp(vibrator = vibrator)
+            CirclePopperApp(vibrator = vibrator, soundManager = soundManager)
         }
     }
 

@@ -58,13 +58,17 @@ import kotlin.math.sin
 import kotlinx.coroutines.isActive
 
 @Composable
-fun CirclePopperApp(viewModel: GameViewModel = viewModel(), vibrator: Vibrator) {
+fun CirclePopperApp(viewModel: GameViewModel = viewModel(), vibrator: Vibrator, soundManager: SoundManager) {
     val state by viewModel.state.collectAsState()
 
     val context = LocalContext.current
 
     LaunchedEffect(vibrator) {
         viewModel.setVibrator(vibrator)
+    }
+
+    LaunchedEffect(soundManager) {
+        viewModel.setSoundManager(soundManager)
     }
 
     DisposableEffect(context) {

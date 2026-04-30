@@ -22,6 +22,7 @@ import kotlin.math.cos
 import kotlin.math.exp
 import kotlin.math.min
 import kotlin.math.sin
+import kotlin.math.sqrt
 import kotlin.random.Random
 
 class GameViewModel(application: Application) : AndroidViewModel(application) {
@@ -50,9 +51,14 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     private val highscoreManager = HighscoreManager(application)
     private var vibrator: Vibrator? = null
+    private var soundManager: SoundManager? = null
 
     fun setVibrator(vib: Vibrator) {
         vibrator = vib
+    }
+
+    fun setSoundManager(sm: SoundManager) {
+        soundManager = sm
     }
 
     private val brightColors = listOf(
@@ -100,7 +106,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun spawnCircle() {
         val minDim = min(screenWidth, screenHeight)
-        val minRadius = minDim * 0.05f
+        val minRadius = minDim * 0.10f
         val maxRadius = minDim * 0.25f
         val radius = Random.nextFloat() * (maxRadius - minRadius) + minRadius
 
@@ -223,44 +229,101 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun updatePositions(dtMs: Long) {
+        var hitWall = false
+        var hitCircle = false
+
         _state.update { state ->
             if (state.circles.isEmpty()) return@update state
             val dt = dtMs.toFloat()
             val gravMul = gravityMultiplier()
             val realGravX = -tiltX * realGravityScale
             val realGravY = tiltY * realGravityScale
-            state.copy(
-                circles = state.circles.map { circle ->
-                    var vx = circle.velocityX + (circle.accelX * gravMul + realGravX) * dt
-                    var vy = circle.velocityY + (circle.accelY * gravMul + realGravY) * dt
-                    var newX = circle.centerX + vx * dt
-                    var newY = circle.centerY + vy * dt
 
-                    if (newX - circle.radius < 0f) {
-                        newX = circle.radius
-                        vx = -vx
-                    } else if (newX + circle.radius > screenWidth) {
-                        newX = screenWidth - circle.radius
-                        vx = -vx
-                    }
+            var updatedCircles = state.circles.map { circle ->
+                var vx = circle.velocityX + (circle.accelX * gravMul + realGravX) * dt
+                var vy = circle.velocityY + (circle.accelY * gravMul + realGravY) * dt
+                var newX = circle.centerX + vx * dt
+                var newY = circle.centerY + vy * dt
 
-                    if (newY - circle.radius < 0f) {
-                        newY = circle.radius
-                        vy = -vy
-                    } else if (newY + circle.radius > screenHeight) {
-                        newY = screenHeight - circle.radius
-                        vy = -vy
-                    }
-
-                    circle.copy(
-                        centerX = newX,
-                        centerY = newY,
-                        velocityX = vx,
-                        velocityY = vy
-                    )
+                var bounced = false
+                if (newX - circle.radius < 0f) {
+                    newX = circle.radius; vx = -vx; bounced = true
+                } else if (newX + circle.radius > screenWidth) {
+                    newX = screenWidth - circle.radius; vx = -vx; bounced = true
                 }
-            )
+
+                if (newY - circle.radius < 0f) {
+                    newY = circle.radius; vy = -vy; bounced = true
+                } else if (newY + circle.radius > screenHeight) {
+                    newY = screenHeight - circle.radius; vy = -vy; bounced = true
+                }
+
+                if (bounced) hitWall = true
+
+                circle.copy(
+                    centerX = newX, centerY = newY,
+                    velocityX = vx, velocityY = vy
+                )
+            }
+
+            val collisionResult = resolveCollisions(updatedCircles)
+            if (collisionResult.second) hitCircle = true
+            updatedCircles = collisionResult.first
+
+            state.copy(circles = updatedCircles)
         }
+
+        if (hitCircle) soundManager?.playCircleHit()
+        else if (hitWall) soundManager?.playWallBump()
+    }
+
+    private fun resolveCollisions(circles: List<GameCircle>): Pair<List<GameCircle>, Boolean> {
+        val result = circles.toMutableList()
+        var hit = false
+        for (i in result.indices) {
+            val a = result[i]
+            for (j in i + 1 until result.size) {
+                val b = result[j]
+                val dx = b.centerX - a.centerX
+                val dy = b.centerY - a.centerY
+                val distSq = dx * dx + dy * dy
+                val minDist = a.radius + b.radius
+                if (distSq >= minDist * minDist) continue
+                if (distSq < 0.0001f) continue
+
+                val dist = sqrt(distSq)
+                val nx = dx / dist
+                val ny = dy / dist
+
+                val overlap = (minDist - dist) / 2f
+                val newAx = a.centerX - overlap * nx
+                val newAy = a.centerY - overlap * ny
+                val newBx = b.centerX + overlap * nx
+                val newBy = b.centerY + overlap * ny
+
+                val dvx = a.velocityX - b.velocityX
+                val dvy = a.velocityY - b.velocityY
+                val dot = dvx * nx + dvy * ny
+
+                if (dot > 0f) {
+                    hit = true
+                    result[i] = a.copy(
+                        centerX = newAx, centerY = newAy,
+                        velocityX = a.velocityX - dot * nx,
+                        velocityY = a.velocityY - dot * ny
+                    )
+                    result[j] = b.copy(
+                        centerX = newBx, centerY = newBy,
+                        velocityX = b.velocityX + dot * nx,
+                        velocityY = b.velocityY + dot * ny
+                    )
+                } else {
+                    result[i] = a.copy(centerX = newAx, centerY = newAy)
+                    result[j] = b.copy(centerX = newBx, centerY = newBy)
+                }
+            }
+        }
+        return Pair(result, hit)
     }
 
     private fun vibrate() {
