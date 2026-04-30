@@ -12,7 +12,8 @@ data class GameCircle(
     val accelY: Float,
     val radius: Float,
     val color: Color,
-    val createdAt: Long
+    val createdAt: Long,
+    val isBonus: Boolean = false
 )
 
 data class GameState(
@@ -20,6 +21,7 @@ data class GameState(
     val score: Int = 0,
     val misses: Int = 0,
     val gameStartTime: Long = 0L,
+    val slowMotionEndTime: Long = 0L,
     val highscores: List<Highscore> = emptyList(),
     val isHighscoreQualifying: Boolean = false,
     val highscoreSaved: Boolean = false,

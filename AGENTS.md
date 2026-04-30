@@ -50,7 +50,9 @@ All loops check `currentCoroutineContext().isActive` and are cancelled via `game
 - **Spawn:** Random position (inset by radius), random angle `[0, 2π)`, speed `0.08–0.35` px/ms, radius `5–25%` of smaller screen dimension, random per-circle gravity `0.00012–0.00040` px/ms² in random direction, scaled by `min(5, 1 + elapsed_seconds × 0.05)`
 - **Lifetime:** 4s. After 2.5s → blink (alpha oscillation 0.2–1.0 at 4Hz via `sin(phase * 8π)`)
 - **Wall bounce:** Reflect velocity component, clamp center to `[radius, dim - radius]`
+- **Circle-to-circle:** Equal-mass elastic collision, velocity exchange along collision normal
 - **Hit detection:** Euclidean distance from tap to circle center ≤ radius
+- **Bonus star:** Golden circle with rotating white star, spawns every 8–12 taps. Hitting it triggers 3-second slow-motion (10% speed) for all circles.
 - **Difficulty:** spawn interval = `max(400ms, 1500ms - score × 30)`
 - **Misses:** 5 → game over
 - **Highscores:** Top 5 persisted via SharedPreferences (JSON-like `name|score;` format). `HighscoreManager` checks qualifying, inserts sorted, trims to 5. UI has dedicated list screen and name entry on game over.

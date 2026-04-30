@@ -41,6 +41,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     private var gameLoopJob: Job? = null
     private var tiltX = 0f
     private var tiltY = 0f
+    private var bonusUntil = 0
 
     private val realGravityScale = 0.0012f
 
@@ -74,10 +75,13 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         Color(0xFFFF3368),
     )
 
+    private val goldColor = Color(0xFFFFD700)
+
     fun startGame(widthPx: Float, heightPx: Float) {
         screenWidth = widthPx
         screenHeight = heightPx
         nextId = 0L
+        bonusUntil = 0
         gameStartTime = System.currentTimeMillis()
         _state.value = GameState(isPlaying = true, gameStartTime = gameStartTime)
         gameLoopJob?.cancel()
@@ -105,14 +109,47 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun spawnCircle() {
+        if (bonusUntil <= 0) {
+            spawnBonusCircle()
+            bonusUntil = Random.nextInt(8, 13)
+        } else {
+            spawnNormalCircle()
+            bonusUntil--
+        }
+    }
+
+    private fun spawnNormalCircle() {
+        val (x, y, radius, vx, vy, ax, ay, color) = commonSpawnParams()
+        val circle = GameCircle(
+            id = nextId++, centerX = x, centerY = y,
+            velocityX = vx, velocityY = vy,
+            accelX = ax, accelY = ay,
+            radius = radius, color = color,
+            createdAt = System.currentTimeMillis()
+        )
+        _state.update { it.copy(circles = it.circles + circle) }
+    }
+
+    private fun spawnBonusCircle() {
+        val (x, y, radius, vx, vy, ax, ay, _) = commonSpawnParams()
+        val circle = GameCircle(
+            id = nextId++, centerX = x, centerY = y,
+            velocityX = vx, velocityY = vy,
+            accelX = ax, accelY = ay,
+            radius = radius * 1.3f, color = goldColor,
+            createdAt = System.currentTimeMillis(),
+            isBonus = true
+        )
+        _state.update { it.copy(circles = it.circles + circle) }
+    }
+
+    private fun commonSpawnParams(): SpawnParams {
         val minDim = min(screenWidth, screenHeight)
         val minRadius = minDim * 0.10f
         val maxRadius = minDim * 0.25f
         val radius = Random.nextFloat() * (maxRadius - minRadius) + minRadius
-
         val x = Random.nextFloat() * (screenWidth - 2 * radius) + radius
         val y = Random.nextFloat() * (screenHeight - 2 * radius) + radius
-
         val score = _state.value.score
         val baseSpeed = Random.nextFloat() * 0.27f + 0.08f
         val speedBoost = 0.35f * (1f - exp(-score / 20f))
@@ -120,28 +157,20 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         val angle = Random.nextFloat() * 2f * PI.toFloat()
         val vx = cos(angle) * speed
         val vy = sin(angle) * speed
-
         val gravAngle = Random.nextFloat() * 2f * PI.toFloat()
         val gravStrength = Random.nextFloat() * 0.00028f + 0.00012f
         val ax = cos(gravAngle) * gravStrength
         val ay = sin(gravAngle) * gravStrength
-
         val color = brightColors.random()
-
-        val circle = GameCircle(
-            id = nextId++,
-            centerX = x.coerceIn(radius, screenWidth - radius),
-            centerY = y.coerceIn(radius, screenHeight - radius),
-            velocityX = vx,
-            velocityY = vy,
-            accelX = ax,
-            accelY = ay,
-            radius = radius,
-            color = color,
-            createdAt = System.currentTimeMillis()
-        )
-        _state.update { it.copy(circles = it.circles + circle) }
+        return SpawnParams(x, y, radius, vx, vy, ax, ay, color)
     }
+
+    private data class SpawnParams(
+        val x: Float, val y: Float, val radius: Float,
+        val vx: Float, val vy: Float,
+        val ax: Float, val ay: Float,
+        val color: Color
+    )
 
     private fun spawnInterval(): Long {
         val score = _state.value.score
@@ -205,10 +234,31 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
         if (hit != null) {
             _state.update {
-                it.copy(
-                    circles = it.circles - hit,
-                    score = it.score + 1
-                )
+                if (hit.isBonus) {
+                    val now = System.currentTimeMillis()
+                    it.copy(
+                        circles = it.circles - hit,
+                        score = it.score + 1,
+                        slowMotionEndTime = now + 3000L
+                    )
+                } else {
+                    it.copy(
+                        circles = it.circles - hit,
+                        score = it.score + 1
+                    )
+                }
+            }
+            if (hit.isBonus) {
+                _state.update { state ->
+                    state.copy(
+                        circles = state.circles.map { c ->
+                            c.copy(
+                                velocityX = c.velocityX * 0.1f,
+                                velocityY = c.velocityY * 0.1f
+                            )
+                        }
+                    )
+                }
             }
         }
     }
@@ -239,10 +289,11 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             val gravMul = gravityMultiplier()
             val realGravX = -tiltX * realGravityScale
             val realGravY = tiltY * realGravityScale
+            val slowMo = if (state.slowMotionEndTime > System.currentTimeMillis()) 0.1f else 1f
 
             var updatedCircles = state.circles.map { circle ->
-                var vx = circle.velocityX + (circle.accelX * gravMul + realGravX) * dt
-                var vy = circle.velocityY + (circle.accelY * gravMul + realGravY) * dt
+                var vx = circle.velocityX + (circle.accelX * gravMul + realGravX) * dt * slowMo
+                var vy = circle.velocityY + (circle.accelY * gravMul + realGravY) * dt * slowMo
                 var newX = circle.centerX + vx * dt
                 var newY = circle.centerY + vy * dt
 

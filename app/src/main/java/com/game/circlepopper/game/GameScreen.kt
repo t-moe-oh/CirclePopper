@@ -43,6 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -54,6 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlin.math.PI
+import kotlin.math.cos
 import kotlin.math.sin
 import kotlinx.coroutines.isActive
 
@@ -257,13 +259,35 @@ private fun GameScreen(state: GameState, onTap: (Float, Float) -> Unit) {
                     center = Offset(circle.centerX, circle.centerY)
                 )
 
-                drawCircle(
-                    color = circle.color.copy(alpha = alpha * 0.3f),
-                    radius = circle.radius + 4f,
-                    center = Offset(circle.centerX, circle.centerY),
-                    style = Stroke(width = 3f)
-                )
+                if (circle.isBonus) {
+                    val glowAlpha = (sin(now * 0.004) + 1.0) / 2.0 * 0.5 + 0.3
+                    drawCircle(
+                        color = Color(0xFFFFD700).copy(alpha = glowAlpha.toFloat()),
+                        radius = circle.radius + 6f,
+                        center = Offset(circle.centerX, circle.centerY),
+                        style = Stroke(width = 3f)
+                    )
+                    val rotation = (now / 3) % 360
+                    val starPath = starPath(
+                        cx = circle.centerX, cy = circle.centerY,
+                        outerR = circle.radius * 0.5f,
+                        innerR = circle.radius * 0.2f,
+                        rotation = rotation.toFloat()
+                    )
+                    drawPath(starPath, color = Color.White, style = Stroke(width = 3f))
+                } else {
+                    drawCircle(
+                        color = circle.color.copy(alpha = alpha * 0.3f),
+                        radius = circle.radius + 4f,
+                        center = Offset(circle.centerX, circle.centerY),
+                        style = Stroke(width = 3f)
+                    )
+                }
             }
+        }
+
+        if (state.slowMotionEndTime > frameTimeMs) {
+            SlowLabel()
         }
 
         HUD(score = state.score, misses = state.misses)
@@ -550,4 +574,39 @@ private fun HighscoreTable(highscores: List<Highscore>, highlightScore: Int?) {
             }
         }
     }
+}
+
+@Composable
+private fun SlowLabel() {
+    Text(
+        text = "SLOW",
+        fontSize = 36.sp,
+        fontWeight = FontWeight.Bold,
+        color = Color(0xFFFFD700),
+        textAlign = TextAlign.Center,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 80.dp)
+    )
+}
+
+private fun starPath(
+    cx: Float, cy: Float,
+    outerR: Float, innerR: Float,
+    rotation: Float
+): Path {
+    val path = Path()
+    val rad = rotation * PI.toFloat() / 180f
+    for (i in 0 until 5) {
+        val outerAngle = rad + i * 2f * PI.toFloat() / 5f - PI.toFloat() / 2f
+        val innerAngle = rad + (i + 0.5f) * 2f * PI.toFloat() / 5f - PI.toFloat() / 2f
+        val ox = cx + cos(outerAngle) * outerR
+        val oy = cy + sin(outerAngle) * outerR
+        val ix = cx + cos(innerAngle) * innerR
+        val iy = cy + sin(innerAngle) * innerR
+        if (i == 0) path.moveTo(ox, oy) else path.lineTo(ox, oy)
+        path.lineTo(ix, iy)
+    }
+    path.close()
+    return path
 }
