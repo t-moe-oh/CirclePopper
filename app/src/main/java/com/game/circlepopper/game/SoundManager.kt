@@ -10,6 +10,7 @@ class SoundManager(context: Context) {
     private val soundPool: SoundPool
     private val wallPlinkId: Int
     private val circlePlinkId: Int
+    private val boopId: Int
 
     init {
         val attrs = AudioAttributes.Builder()
@@ -24,6 +25,7 @@ class SoundManager(context: Context) {
 
         wallPlinkId = soundPool.load(context, R.raw.plink_wall, 1)
         circlePlinkId = soundPool.load(context, R.raw.plink_circle, 1)
+        boopId = soundPool.load(context, R.raw.boop, 1)
     }
 
     fun playWallBump() {
@@ -32,5 +34,9 @@ class SoundManager(context: Context) {
 
     fun playCircleHit() {
         soundPool.play(circlePlinkId, 0.5f, 0.5f, 1, 0, 1f)
+    }
+
+    fun playBoop() {
+        soundPool.play(boopId, 0.5f, 0.5f, 1, 0, 1f)
     }
 }

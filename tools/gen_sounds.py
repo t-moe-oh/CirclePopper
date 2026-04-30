@@ -1,8 +1,7 @@
 import wave, struct, math
 
-def gen_plink(filename, start_freq, end_freq, decay):
+def gen_plink(filename, start_freq, end_freq, decay, duration=0.12):
     sample_rate = 22050
-    duration = 0.12
     num_samples = int(sample_rate * duration)
     sweep = end_freq - start_freq
 
@@ -20,3 +19,4 @@ def gen_plink(filename, start_freq, end_freq, decay):
 
 gen_plink("app/src/main/res/raw/plink_wall.wav",   300, 200, 20)
 gen_plink("app/src/main/res/raw/plink_circle.wav", 600, 400, 30)
+gen_plink("app/src/main/res/raw/boop.wav",         400, 100, 8, duration=0.70)

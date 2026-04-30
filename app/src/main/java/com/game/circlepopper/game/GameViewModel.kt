@@ -154,6 +154,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         if (expired.isEmpty()) return
         Log.d(TAG, "expired=${expired.size}, misses=${_state.value.misses + expired.size}")
         vibrate()
+        soundManager?.playBoop()
 
         _state.update { state ->
             val newMisses = state.misses + expired.size
