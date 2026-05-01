@@ -579,10 +579,10 @@ private fun HighscoreTable(highscores: List<Highscore>, highlightScore: Int?) {
 @Composable
 private fun SlowLabel() {
     Text(
-        text = "SLOW",
-        fontSize = 36.sp,
+        text = "SLO-MO TIME!",
+        fontSize = 48.sp,
         fontWeight = FontWeight.Bold,
-        color = Color(0xFFFFD700),
+        color = Color(0xFFB8860B),
         textAlign = TextAlign.Center,
         modifier = Modifier
             .fillMaxWidth()
