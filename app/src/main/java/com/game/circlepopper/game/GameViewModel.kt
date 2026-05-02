@@ -196,6 +196,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 misses = newMisses,
                 isGameOver = gameOver,
                 isPlaying = if (gameOver) false else state.isPlaying,
+                showGameOverOverlay = gameOver,
                 highscores = highscores,
                 isHighscoreQualifying = isQualifying
             )
@@ -221,6 +222,10 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     fun hideHighscoreList() {
         _state.update { it.copy(showHighscoreList = false) }
+    }
+
+    fun clearGameOverOverlay() {
+        _state.update { it.copy(showGameOverOverlay = false) }
     }
 
     fun onTap(x: Float, y: Float) {

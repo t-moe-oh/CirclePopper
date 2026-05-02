@@ -57,6 +57,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 
 @Composable
@@ -118,6 +119,10 @@ fun CirclePopperApp(viewModel: GameViewModel = viewModel(), vibrator: Vibrator, 
                     onHighscores = viewModel::showHighscoreList,
                     onQuit = { (context as? Activity)?.finish() }
                 )
+            }
+
+            state.showGameOverOverlay -> {
+                GameOverOverlay(onDone = viewModel::clearGameOverOverlay)
             }
 
             state.isGameOver -> {
@@ -582,6 +587,27 @@ private fun HighscoreTable(highscores: List<Highscore>, highlightScore: Int?) {
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun GameOverOverlay(onDone: () -> Unit) {
+    LaunchedEffect(Unit) {
+        delay(2000L)
+        onDone()
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF0F0F23)),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "GAME OVER!",
+            fontSize = 52.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFFE94560)
+        )
     }
 }
 
