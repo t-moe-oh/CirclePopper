@@ -60,7 +60,7 @@ import kotlin.math.sin
 import kotlinx.coroutines.isActive
 
 @Composable
-fun CirclePopperApp(viewModel: GameViewModel = viewModel(), vibrator: Vibrator, soundManager: SoundManager) {
+fun CirclePopperApp(viewModel: GameViewModel = viewModel(), vibrator: Vibrator, soundManager: SoundManager, musicManager: MusicManager) {
     val state by viewModel.state.collectAsState()
 
     val context = LocalContext.current
@@ -71,6 +71,15 @@ fun CirclePopperApp(viewModel: GameViewModel = viewModel(), vibrator: Vibrator, 
 
     LaunchedEffect(soundManager) {
         viewModel.setSoundManager(soundManager)
+    }
+
+    LaunchedEffect(state.isPlaying, state.isGameOver, state.showHighscoreList) {
+        if (!state.isPlaying) musicManager.startMenuMusic()
+        else musicManager.stopMenuMusic()
+    }
+
+    DisposableEffect(Unit) {
+        onDispose { musicManager.stopMenuMusic() }
     }
 
     DisposableEffect(context) {
