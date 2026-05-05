@@ -3,13 +3,12 @@
 ## Build
 
 ```sh
-export JAVA_HOME=/usr/lib/jvm/java-21-openjdk
 export ANDROID_HOME=/opt/android-sdk
 ./gradlew assembleDebug        # debug APK → app/build/outputs/apk/debug/
 ./gradlew assembleRelease      # release (no minification currently)
 ```
 
-JDK 25 is installed but incompatible with AGP 8.9.0 / Gradle 8.13 — use JDK 21.
+JDK 25 is installed and supported since Gradle 9.5.0 + AGP 9.2.1.
 
 ## Project structure
 
@@ -67,14 +66,15 @@ All loops check `currentCoroutineContext().isActive` and are cancelled via `game
 
 | Setting | Value |
 |---|---|
-| compileSdk / targetSdk | 36 (API 36: Android 16) |
-| minSdk | 26 |
-| AGP | 8.9.0 |
-| Kotlin | 2.1.0 |
-| Compose BOM | 2025.02.00 |
-| Build tools | 37.0.0 |
+| compileSdk / targetSdk | 37 (API 37: Android 17) |
+| minSdk | 29 |
+| AGP | 9.2.1 |
+| Kotlin | 2.3.21 |
+| Compose BOM | 2026.04.01 |
+| Gradle | 9.5.0 |
+| Build tools | 36.0.0 |
 
-Platform `android-37` is installed as `android-37.0` (source.properties reports ApiLevel=37.0). AGP can't find it, so compile with 36.
+No longer needed — `android-37` platform properly detected by AGP 9.2.1.
 
 ## Conventions
 
