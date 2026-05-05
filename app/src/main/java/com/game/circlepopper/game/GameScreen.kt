@@ -28,6 +28,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -79,8 +81,8 @@ fun CirclePopperApp(
         viewModel.setSoundManager(soundManager)
     }
 
-    LaunchedEffect(state.isPlaying, state.isGameOver, state.showHighscoreList) {
-        if (!state.isPlaying) musicManager.startMenuMusic()
+    LaunchedEffect(state.isPlaying, state.isGameOver, state.showHighscoreList, state.settingsMenuMusic) {
+        if (!state.isPlaying && state.settingsMenuMusic) musicManager.startMenuMusic()
         else musicManager.stopMenuMusic()
     }
 
@@ -118,10 +120,23 @@ fun CirclePopperApp(
                 )
             }
 
+            state.showSettings -> {
+                SettingsScreen(
+                    menuMusic = state.settingsMenuMusic,
+                    haptics = state.settingsHaptics,
+                    realGravity = state.settingsRealGravity,
+                    onToggleMenuMusic = viewModel::toggleMenuMusic,
+                    onToggleHaptics = viewModel::toggleHaptics,
+                    onToggleRealGravity = viewModel::toggleRealGravity,
+                    onBack = viewModel::hideSettings
+                )
+            }
+
             !state.isPlaying && !state.isGameOver -> {
                 MenuScreen(
                     onStart = { viewModel.startGame(widthPx, heightPx) },
                     onHighscores = viewModel::showHighscoreList,
+                    onSettings = viewModel::showSettings,
                     onQuit = { (context as? Activity)?.finish() }
                 )
             }
@@ -153,7 +168,7 @@ fun CirclePopperApp(
 }
 
 @Composable
-private fun MenuScreen(onStart: () -> Unit, onHighscores: () -> Unit, onQuit: () -> Unit) {
+private fun MenuScreen(onStart: () -> Unit, onHighscores: () -> Unit, onSettings: () -> Unit, onQuit: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -210,6 +225,25 @@ private fun MenuScreen(onStart: () -> Unit, onHighscores: () -> Unit, onQuit: ()
             ) {
                 Text(
                     text = "HIGHSCORES",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                onClick = onSettings,
+                modifier = Modifier
+                    .width(220.dp)
+                    .height(56.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF0F3460)
+                )
+            ) {
+                Text(
+                    text = "SETTINGS",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -596,6 +630,105 @@ private fun HighscoreTable(highscores: List<Highscore>, highlightScore: Int?) {
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun SettingsScreen(
+    menuMusic: Boolean,
+    haptics: Boolean,
+    realGravity: Boolean,
+    onToggleMenuMusic: (Boolean) -> Unit,
+    onToggleHaptics: (Boolean) -> Unit,
+    onToggleRealGravity: (Boolean) -> Unit,
+    onBack: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF1A1A2E)),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = "Settings",
+                fontSize = 42.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFFE94560)
+            )
+
+            Spacer(modifier = Modifier.height(40.dp))
+
+            SettingsRow(
+                label = "Menu Music",
+                icon = "🎵",
+                checked = menuMusic,
+                onCheckedChange = onToggleMenuMusic
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            SettingsRow(
+                label = "Haptics",
+                icon = "📳",
+                checked = haptics,
+                onCheckedChange = onToggleHaptics
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            SettingsRow(
+                label = "Real Gravity",
+                icon = "🌐",
+                checked = realGravity,
+                onCheckedChange = onToggleRealGravity
+            )
+
+            Spacer(modifier = Modifier.height(48.dp))
+
+            Button(
+                onClick = onBack,
+                modifier = Modifier
+                    .width(220.dp)
+                    .height(56.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFE94560)
+                )
+            ) {
+                Text(
+                    text = "BACK",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SettingsRow(label: String, icon: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 48.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "$icon  $label",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White
+        )
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = Color(0xFFE94560),
+                checkedTrackColor = Color(0xFFE94560).copy(alpha = 0.3f)
+            )
+        )
     }
 }
 

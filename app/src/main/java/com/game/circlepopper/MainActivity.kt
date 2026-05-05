@@ -49,7 +49,7 @@ class MainActivity : ComponentActivity() {
         Log.d("CirclePopper", "MainActivity.onResume")
         hideSystemBars()
         viewModel.resumeGame()
-        if (!viewModel.state.value.isPlaying) {
+        if (!viewModel.state.value.isPlaying && viewModel.state.value.settingsMenuMusic) {
             musicManager.resumeMenuMusic()
         }
     }

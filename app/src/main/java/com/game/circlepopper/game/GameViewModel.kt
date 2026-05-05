@@ -1,6 +1,7 @@
 package com.game.circlepopper.game
 
 import android.app.Application
+import android.content.Context
 import android.os.Build
 import android.os.VibrationAttributes
 import android.os.VibrationEffect
@@ -30,10 +31,21 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     companion object {
         private const val TAG = "CirclePopper"
+        private const val PREFS_NAME = "settings"
     }
 
     private val _state = MutableStateFlow(GameState())
     val state: StateFlow<GameState> = _state.asStateFlow()
+
+    private val settingsPrefs = application.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+
+    init {
+        _state.value = GameState(
+            settingsMenuMusic = settingsPrefs.getBoolean("menu_music", true),
+            settingsHaptics = settingsPrefs.getBoolean("haptics", true),
+            settingsRealGravity = settingsPrefs.getBoolean("real_gravity", true),
+        )
+    }
 
     private var screenWidth = 0f
     private var screenHeight = 0f
@@ -86,7 +98,13 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         nextId = 0L
         bonusUntil = 0
         gameStartTime = System.currentTimeMillis()
-        _state.value = GameState(isPlaying = true, gameStartTime = gameStartTime)
+        val s = _state.value
+        _state.value = GameState(
+            isPlaying = true, gameStartTime = gameStartTime,
+            settingsMenuMusic = s.settingsMenuMusic,
+            settingsHaptics = s.settingsHaptics,
+            settingsRealGravity = s.settingsRealGravity,
+        )
         gameLoopJob?.cancel()
         gameLoopJob = viewModelScope.launch {
             launch { spawnLoop() }
@@ -229,6 +247,29 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         _state.update { it.copy(showHighscoreList = false) }
     }
 
+    fun showSettings() {
+        _state.update { it.copy(showSettings = true) }
+    }
+
+    fun hideSettings() {
+        _state.update { it.copy(showSettings = false) }
+    }
+
+    fun toggleMenuMusic(enabled: Boolean) {
+        settingsPrefs.edit().putBoolean("menu_music", enabled).apply()
+        _state.update { it.copy(settingsMenuMusic = enabled) }
+    }
+
+    fun toggleHaptics(enabled: Boolean) {
+        settingsPrefs.edit().putBoolean("haptics", enabled).apply()
+        _state.update { it.copy(settingsHaptics = enabled) }
+    }
+
+    fun toggleRealGravity(enabled: Boolean) {
+        settingsPrefs.edit().putBoolean("real_gravity", enabled).apply()
+        _state.update { it.copy(settingsRealGravity = enabled) }
+    }
+
     fun clearGameOverOverlay() {
         _state.update { it.copy(showGameOverOverlay = false) }
     }
@@ -331,8 +372,8 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             if (state.circles.isEmpty()) return@update state
             val dt = dtMs.toFloat()
             val gravMul = gravityMultiplier()
-            val realGravX = -tiltX * realGravityScale
-            val realGravY = tiltY * realGravityScale
+            val realGravX = if (state.settingsRealGravity) -tiltX * realGravityScale else 0f
+            val realGravY = if (state.settingsRealGravity) tiltY * realGravityScale else 0f
             val slowMo = if (state.slowMotionEndTime > System.currentTimeMillis()) 0.1f else 1f
 
             var updatedCircles = state.circles.map { circle ->
@@ -428,6 +469,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun vibrateLight() {
+        if (!_state.value.settingsHaptics) return
         val vib = vibrator ?: return
         Log.d(TAG, "vibrateLight()")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -443,6 +485,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun vibrateStrong() {
+        if (!_state.value.settingsHaptics) return
         val vib = vibrator ?: return
         Log.d(TAG, "vibrateStrong()")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -460,6 +503,11 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     fun resetGame() {
         gameLoopJob?.cancel()
         countdownJob?.cancel()
-        _state.value = GameState()
+        val s = _state.value
+        _state.value = GameState(
+            settingsMenuMusic = s.settingsMenuMusic,
+            settingsHaptics = s.settingsHaptics,
+            settingsRealGravity = s.settingsRealGravity,
+        )
     }
 }

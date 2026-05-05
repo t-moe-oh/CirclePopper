@@ -26,9 +26,13 @@ data class GameState(
     val isHighscoreQualifying: Boolean = false,
     val highscoreSaved: Boolean = false,
     val showHighscoreList: Boolean = false,
+    val showSettings: Boolean = false,
     val showGameOverOverlay: Boolean = false,
     val isPaused: Boolean = false,
     val resumeCountdown: Int = 0,
+    val settingsMenuMusic: Boolean = true,
+    val settingsHaptics: Boolean = true,
+    val settingsRealGravity: Boolean = true,
     val isGameOver: Boolean = false,
     val isPlaying: Boolean = false
 )
