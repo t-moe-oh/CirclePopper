@@ -42,6 +42,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     private var tiltX = 0f
     private var tiltY = 0f
     private var bonusUntil = 0
+    private var pauseStartTime = 0L
 
     private val realGravityScale = 0.0012f
 
@@ -95,6 +96,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     private suspend fun spawnLoop() {
         delay(1500L)
         while (currentCoroutineContext().isActive) {
+            if (_state.value.isPaused) { delay(50); continue }
             val interval = spawnInterval()
             delay(interval)
             if (currentCoroutineContext().isActive) spawnCircle()
@@ -103,6 +105,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     private suspend fun cleanupLoop() {
         while (currentCoroutineContext().isActive) {
+            if (_state.value.isPaused) { delay(50); continue }
             delay(100)
             cleanupExpiredCircles()
             if (_state.value.isGameOver) break
@@ -228,6 +231,29 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         _state.update { it.copy(showGameOverOverlay = false) }
     }
 
+    fun pauseGame() {
+        Log.d(TAG, "pauseGame() called, isPlaying=${_state.value.isPlaying}")
+        if (_state.value.isPlaying) {
+            pauseStartTime = System.currentTimeMillis()
+            _state.update { it.copy(isPaused = true) }
+        }
+    }
+
+    fun resumeGame() {
+        Log.d(TAG, "resumeGame() called, isPaused=${_state.value.isPaused}")
+        _state.update { state ->
+            if (state.isPaused) {
+                val pauseDuration = System.currentTimeMillis() - pauseStartTime
+                state.copy(
+                    isPaused = false,
+                    circles = state.circles.map { c ->
+                        c.copy(createdAt = c.createdAt + pauseDuration + 1000L)
+                    }
+                )
+            } else state
+        }
+    }
+
     fun onTap(x: Float, y: Float) {
         val s = _state.value
         if (!s.isPlaying || s.isGameOver) return
@@ -272,6 +298,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     private suspend fun movementLoop() {
         var lastUpdate = System.currentTimeMillis()
         while (currentCoroutineContext().isActive) {
+            if (_state.value.isPaused) { delay(50); lastUpdate = System.currentTimeMillis(); continue }
             val now = System.currentTimeMillis()
             val dt = now - lastUpdate
             if (dt > 0L) updatePositions(dt)

@@ -27,4 +27,16 @@ class MusicManager(context: Context) {
         }
         mediaPlayer = null
     }
+
+    fun pauseMenuMusic() {
+        mediaPlayer?.pause()
+    }
+
+    fun resumeMenuMusic() {
+        if (mediaPlayer != null) {
+            mediaPlayer?.start()
+        } else {
+            startMenuMusic()
+        }
+    }
 }

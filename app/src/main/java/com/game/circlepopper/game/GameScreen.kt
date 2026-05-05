@@ -61,7 +61,12 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 
 @Composable
-fun CirclePopperApp(viewModel: GameViewModel = viewModel(), vibrator: Vibrator, soundManager: SoundManager, musicManager: MusicManager) {
+fun CirclePopperApp(
+    viewModel: GameViewModel,
+    vibrator: Vibrator,
+    soundManager: SoundManager,
+    musicManager: MusicManager
+) {
     val state by viewModel.state.collectAsState()
 
     val context = LocalContext.current

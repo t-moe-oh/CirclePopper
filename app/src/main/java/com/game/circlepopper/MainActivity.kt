@@ -4,13 +4,16 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Vibrator
 import android.os.VibratorManager
+import android.util.Log
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowInsetsController
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.lifecycle.ViewModelProvider
 import com.game.circlepopper.game.CirclePopperApp
+import com.game.circlepopper.game.GameViewModel
 import com.game.circlepopper.game.MusicManager
 import com.game.circlepopper.game.SoundManager
 
@@ -28,24 +31,34 @@ class MainActivity : ComponentActivity() {
 
     private val soundManager by lazy { SoundManager(this) }
     private val musicManager by lazy { MusicManager(this) }
+    private val viewModel: GameViewModel by lazy {
+        ViewModelProvider(this)[GameViewModel::class.java]
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         hideSystemBars()
         setContent {
-            CirclePopperApp(vibrator = vibrator, soundManager = soundManager, musicManager = musicManager)
+            CirclePopperApp(viewModel = viewModel, vibrator = vibrator, soundManager = soundManager, musicManager = musicManager)
         }
     }
 
     override fun onResume() {
         super.onResume()
+        Log.d("CirclePopper", "MainActivity.onResume")
         hideSystemBars()
+        viewModel.resumeGame()
+        if (!viewModel.state.value.isPlaying) {
+            musicManager.resumeMenuMusic()
+        }
     }
 
     override fun onPause() {
         super.onPause()
-        musicManager.stopMenuMusic()
+        Log.d("CirclePopper", "MainActivity.onPause")
+        musicManager.pauseMenuMusic()
+        viewModel.pauseGame()
     }
 
     private fun hideSystemBars() {
