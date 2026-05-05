@@ -2,6 +2,7 @@ package com.game.circlepopper.game
 
 import android.app.Application
 import android.os.Build
+import android.os.VibrationAttributes
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.util.Log
@@ -187,7 +188,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         val expired = _state.value.circles.filter { now - it.createdAt > 4000L }
         if (expired.isEmpty()) return
         Log.d(TAG, "expired=${expired.size}, misses=${_state.value.misses + expired.size}")
-        vibrate()
+        vibrateStrong()
         soundManager?.playBoop()
 
         _state.update { state ->
@@ -368,8 +369,13 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             state.copy(circles = updatedCircles)
         }
 
-        if (hitCircle) soundManager?.playCircleHit()
-        else if (hitWall) soundManager?.playWallBump()
+        if (hitCircle) {
+            vibrateLight()
+            soundManager?.playCircleHit()
+        } else if (hitWall) {
+            vibrateLight()
+            soundManager?.playWallBump()
+        }
     }
 
     private fun resolveCollisions(circles: List<GameCircle>): Pair<List<GameCircle>, Boolean> {
@@ -421,13 +427,33 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         return Pair(result, hit)
     }
 
-    private fun vibrate() {
+    private fun vibrateLight() {
         val vib = vibrator ?: return
-        Log.d(TAG, "vibrate() called")
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vib.vibrate(VibrationEffect.createOneShot(500L, VibrationEffect.DEFAULT_AMPLITUDE))
+        Log.d(TAG, "vibrateLight()")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val attrs = VibrationAttributes.Builder()
+                .setUsage(VibrationAttributes.USAGE_PHYSICAL_EMULATION)
+                .build()
+            vib.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_TICK), attrs)
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            vib.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_TICK))
         } else {
-            vib.vibrate(500L)
+            vib.vibrate(VibrationEffect.createOneShot(30L, 100))
+        }
+    }
+
+    private fun vibrateStrong() {
+        val vib = vibrator ?: return
+        Log.d(TAG, "vibrateStrong()")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val attrs = VibrationAttributes.Builder()
+                .setUsage(VibrationAttributes.USAGE_PHYSICAL_EMULATION)
+                .build()
+            vib.vibrate(VibrationEffect.createOneShot(500L, 255), attrs)
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            vib.vibrate(VibrationEffect.createOneShot(500L, 255))
+        } else {
+            vib.vibrate(VibrationEffect.createOneShot(500L, 255))
         }
     }
 
