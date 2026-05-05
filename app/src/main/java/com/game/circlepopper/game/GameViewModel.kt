@@ -43,6 +43,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     private var tiltY = 0f
     private var bonusUntil = 0
     private var pauseStartTime = 0L
+    private var countdownJob: Job? = null
 
     private val realGravityScale = 0.0012f
 
@@ -240,23 +241,32 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun resumeGame() {
-        Log.d(TAG, "resumeGame() called, isPaused=${_state.value.isPaused}")
-        _state.update { state ->
-            if (state.isPaused) {
-                val pauseDuration = System.currentTimeMillis() - pauseStartTime
-                state.copy(
+        if (!_state.value.isPaused) return
+        _state.update { it.copy(resumeCountdown = 3) }
+
+        countdownJob?.cancel()
+        countdownJob = viewModelScope.launch {
+            delay(1000L); _state.update { it.copy(resumeCountdown = 2) }
+            delay(1000L); _state.update { it.copy(resumeCountdown = 1) }
+            delay(1000L)
+
+            val now = System.currentTimeMillis()
+            val pauseDuration = now - pauseStartTime
+            _state.update {
+                it.copy(
+                    resumeCountdown = 0,
                     isPaused = false,
-                    circles = state.circles.map { c ->
+                    circles = it.circles.map { c ->
                         c.copy(createdAt = c.createdAt + pauseDuration + 1000L)
                     }
                 )
-            } else state
+            }
         }
     }
 
     fun onTap(x: Float, y: Float) {
         val s = _state.value
-        if (!s.isPlaying || s.isGameOver) return
+        if (!s.isPlaying || s.isGameOver || s.isPaused) return
 
         val hit = s.circles.find { circle ->
             val dx = x - circle.centerX
@@ -423,6 +433,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     fun resetGame() {
         gameLoopJob?.cancel()
+        countdownJob?.cancel()
         _state.value = GameState()
     }
 }

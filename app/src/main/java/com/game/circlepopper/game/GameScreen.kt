@@ -305,6 +305,10 @@ private fun GameScreen(state: GameState, onTap: (Float, Float) -> Unit) {
             }
         }
 
+        if (state.resumeCountdown > 0) {
+            ResumeCountdown(count = state.resumeCountdown)
+        }
+
         if (state.slowMotionEndTime > frameTimeMs) {
             SlowLabel()
         }
@@ -592,6 +596,23 @@ private fun HighscoreTable(highscores: List<Highscore>, highlightScore: Int?) {
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun ResumeCountdown(count: Int) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0x80000000)),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "$count",
+            fontSize = 120.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFFE94560)
+        )
     }
 }
 
