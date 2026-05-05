@@ -2,20 +2,18 @@ package com.game.circlepopper.game
 
 import android.content.Context
 import android.media.MediaPlayer
+import com.game.circlepopper.R
 
-class MusicManager(context: Context) {
+class MusicManager(private val appContext: Context) {
 
     private var mediaPlayer: MediaPlayer? = null
-    private val afd = context.assets.openFd("menu_music.ogg")
 
     fun startMenuMusic() {
         if (mediaPlayer?.isPlaying == true) return
         mediaPlayer?.release()
-        mediaPlayer = MediaPlayer().apply {
-            setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
+        mediaPlayer = MediaPlayer.create(appContext, R.raw.menu_music).apply {
             isLooping = true
             setVolume(0.4f, 0.4f)
-            prepare()
             start()
         }
     }
