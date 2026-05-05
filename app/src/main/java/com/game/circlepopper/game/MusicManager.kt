@@ -6,7 +6,7 @@ import android.media.MediaPlayer
 class MusicManager(context: Context) {
 
     private var mediaPlayer: MediaPlayer? = null
-    private val afd = context.assets.openFd("menu_music.wav")
+    private val afd = context.assets.openFd("menu_music.ogg")
 
     fun startMenuMusic() {
         if (mediaPlayer?.isPlaying == true) return
