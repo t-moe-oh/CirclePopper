@@ -4,8 +4,8 @@
 
 ```sh
 export ANDROID_HOME=/opt/android-sdk
-./gradlew assembleDebug        # debug APK → app/build/outputs/apk/debug/
-./gradlew assembleRelease      # release (no minification currently)
+./gradlew assembleRelease      # release APK → app/build/outputs/apk/release/CirclePopper-release.apk (3.4MB, signed)
+./gradlew assembleDebug        # debug APK (larger, unsigned)
 ```
 
 JDK 25 is installed and supported since Gradle 9.5.0 + AGP 9.2.1.
