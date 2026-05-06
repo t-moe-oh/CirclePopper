@@ -67,7 +67,7 @@ All loops check `currentCoroutineContext().isActive` and are cancelled via `game
 | Setting | Value |
 |---|---|
 | compileSdk / targetSdk | 37 (API 37: Android 17) |
-| minSdk | 29 |
+| minSdk | 23 |
 | AGP | 9.2.1 |
 | Kotlin | 2.3.21 |
 | Compose BOM | 2026.04.01 |
