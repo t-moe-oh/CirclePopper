@@ -330,7 +330,7 @@ private fun GameScreen(state: GameState, onTap: (Float, Float) -> Unit) {
 
                 if (state.showTrails) {
                     circle.trail.forEachIndexed { i, (tx, ty) ->
-                        val trailAlpha = (i + 1).toFloat() / (circle.trail.size + 1) * 0.4f
+                        val trailAlpha = (i + 1).toFloat() / (circle.trail.size + 1) * 0.4f * alpha
                         drawCircle(
                             color = circle.color.copy(alpha = trailAlpha),
                             radius = circle.radius,
