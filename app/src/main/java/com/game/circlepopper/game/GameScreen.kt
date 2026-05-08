@@ -28,6 +28,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -61,8 +62,6 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
-
-private const val SHOW_TRAILS = false
 
 @Composable
 fun CirclePopperApp(
@@ -134,11 +133,20 @@ fun CirclePopperApp(
                 )
             }
 
+            state.showDebugMenu -> {
+                DebugMenuScreen(
+                    showTrails = state.showTrails,
+                    onToggleTrails = viewModel::toggleTrails,
+                    onBack = viewModel::hideDebugMenu
+                )
+            }
+
             !state.isPlaying && !state.isGameOver -> {
                 MenuScreen(
                     onStart = { viewModel.startGame(widthPx, heightPx) },
                     onHighscores = viewModel::showHighscoreList,
                     onSettings = viewModel::showSettings,
+                    onDebugMenu = viewModel::showDebugMenu,
                     onQuit = { (context as? Activity)?.finish() }
                 )
             }
@@ -170,7 +178,7 @@ fun CirclePopperApp(
 }
 
 @Composable
-private fun MenuScreen(onStart: () -> Unit, onHighscores: () -> Unit, onSettings: () -> Unit, onQuit: () -> Unit) {
+private fun MenuScreen(onStart: () -> Unit, onHighscores: () -> Unit, onSettings: () -> Unit, onDebugMenu: () -> Unit, onQuit: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -234,21 +242,28 @@ private fun MenuScreen(onStart: () -> Unit, onHighscores: () -> Unit, onSettings
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Button(
-                onClick = onSettings,
+            Surface(
                 modifier = Modifier
                     .width(220.dp)
-                    .height(56.dp),
+                    .height(56.dp)
+                    .pointerInput(onSettings, onDebugMenu) {
+                        detectTapGestures(
+                            onTap = { onSettings() },
+                            onLongPress = { onDebugMenu() }
+                        )
+                    },
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF0F3460)
-                )
+                color = Color(0xFF0F3460),
+                tonalElevation = 2.dp
             ) {
-                Text(
-                    text = "SETTINGS",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        text = "SETTINGS",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -308,7 +323,7 @@ private fun GameScreen(state: GameState, onTap: (Float, Float) -> Unit) {
                     1f
                 }
 
-                if (SHOW_TRAILS) {
+                if (state.showTrails) {
                     circle.trail.forEachIndexed { i, (tx, ty) ->
                         val trailAlpha = (i + 1).toFloat() / (circle.trail.size + 1) * 0.4f
                         drawCircle(
@@ -582,6 +597,57 @@ private fun HighscoreListScreen(highscores: List<Highscore>, onBack: () -> Unit)
             }
 
             Spacer(modifier = Modifier.height(32.dp))
+
+            Button(
+                onClick = onBack,
+                modifier = Modifier
+                    .width(220.dp)
+                    .height(56.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFE94560)
+                )
+            ) {
+                Text(
+                    text = "BACK",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DebugMenuScreen(
+    showTrails: Boolean,
+    onToggleTrails: (Boolean) -> Unit,
+    onBack: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF1A1A2E)),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = "Debug Menu",
+                fontSize = 42.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFFE94560)
+            )
+
+            Spacer(modifier = Modifier.height(40.dp))
+
+            SettingsRow(
+                label = "Show Trails",
+                icon = "👁",
+                checked = showTrails,
+                onCheckedChange = onToggleTrails
+            )
+
+            Spacer(modifier = Modifier.height(48.dp))
 
             Button(
                 onClick = onBack,

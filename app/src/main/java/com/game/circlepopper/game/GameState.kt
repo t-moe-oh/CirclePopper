@@ -28,6 +28,8 @@ data class GameState(
     val highscoreSaved: Boolean = false,
     val showHighscoreList: Boolean = false,
     val showSettings: Boolean = false,
+    val showDebugMenu: Boolean = false,
+    val showTrails: Boolean = false,
     val showGameOverOverlay: Boolean = false,
     val isPaused: Boolean = false,
     val resumeCountdown: Int = 0,

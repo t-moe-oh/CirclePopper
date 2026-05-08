@@ -104,6 +104,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             settingsMenuMusic = s.settingsMenuMusic,
             settingsHaptics = s.settingsHaptics,
             settingsRealGravity = s.settingsRealGravity,
+            showTrails = s.showTrails,
         )
         gameLoopJob?.cancel()
         gameLoopJob = viewModelScope.launch {
@@ -253,6 +254,18 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     fun hideSettings() {
         _state.update { it.copy(showSettings = false) }
+    }
+
+    fun showDebugMenu() {
+        _state.update { it.copy(showDebugMenu = true) }
+    }
+
+    fun hideDebugMenu() {
+        _state.update { it.copy(showDebugMenu = false) }
+    }
+
+    fun toggleTrails(enabled: Boolean) {
+        _state.update { it.copy(showTrails = enabled) }
     }
 
     fun toggleMenuMusic(enabled: Boolean) {
@@ -514,6 +527,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             settingsMenuMusic = s.settingsMenuMusic,
             settingsHaptics = s.settingsHaptics,
             settingsRealGravity = s.settingsRealGravity,
+            showTrails = s.showTrails,
         )
     }
 }
