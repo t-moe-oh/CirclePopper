@@ -243,6 +243,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             state.copy(
                 circles = state.circles.filter { now - it.createdAt <= 4000L },
                 misses = newMisses,
+                score = state.score + expiredBombs,
                 isGameOver = gameOver,
                 isPlaying = if (gameOver) false else state.isPlaying,
                 showGameOverOverlay = gameOver,
