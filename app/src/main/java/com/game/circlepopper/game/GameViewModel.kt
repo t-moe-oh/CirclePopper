@@ -366,13 +366,26 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         if (hit != null) {
             if (hit.isBomb) {
                 _state.update {
+                    val newMisses = it.misses + 1
+                    val gameOver = newMisses >= 5
+                    val highscores = if (gameOver) highscoreManager.getHighscores() else emptyList()
+                    val isQualifying = if (gameOver) highscoreManager.isQualifying(it.score) else false
                     it.copy(
                         circles = emptyList(),
                         score = it.score + 1,
-                        misses = it.misses + 1
+                        misses = newMisses,
+                        isGameOver = gameOver,
+                        isPlaying = if (gameOver) false else it.isPlaying,
+                        showGameOverOverlay = gameOver,
+                        highscores = highscores,
+                        isHighscoreQualifying = isQualifying
                     )
                 }
+                if (_state.value.isGameOver) {
+                    gameLoopJob?.cancel()
+                }
                 soundManager?.playBoom()
+                vibrateStrong()
             } else if (hit.isBonus) {
                 val now = System.currentTimeMillis()
                 _state.update {
