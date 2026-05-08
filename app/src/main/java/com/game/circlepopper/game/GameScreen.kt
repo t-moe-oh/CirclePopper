@@ -398,6 +398,13 @@ private fun GameScreen(state: GameState, onTap: (Float, Float) -> Unit) {
             SlowLabel()
         }
 
+        if (state.bombDodgeEndTime > frameTimeMs) {
+            BombLabel(text = "Dodged a Bomb!")
+        }
+        if (state.bombSacrificeEndTime > frameTimeMs) {
+            BombLabel(text = "A little Sacrifice!")
+        }
+
         HUD(score = state.score, misses = state.misses)
         TimerDisplay(
             gameStartTime = state.gameStartTime,
@@ -924,6 +931,20 @@ private fun SlowLabel() {
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 80.dp)
+    )
+}
+
+@Composable
+private fun BombLabel(text: String) {
+    Text(
+        text = text,
+        fontSize = 42.sp,
+        fontWeight = FontWeight.Bold,
+        color = Color(0xFFE94560),
+        textAlign = TextAlign.Center,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 160.dp)
     )
 }
 

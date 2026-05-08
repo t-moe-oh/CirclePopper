@@ -246,6 +246,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 isGameOver = gameOver,
                 isPlaying = if (gameOver) false else state.isPlaying,
                 showGameOverOverlay = gameOver,
+                bombDodgeEndTime = if (expiredBombs > 0) now + 1000L else state.bombDodgeEndTime,
                 highscores = highscores,
                 isHighscoreQualifying = isQualifying
             )
@@ -377,6 +378,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                         isGameOver = gameOver,
                         isPlaying = if (gameOver) false else it.isPlaying,
                         showGameOverOverlay = gameOver,
+                        bombSacrificeEndTime = System.currentTimeMillis() + 2000L,
                         highscores = highscores,
                         isHighscoreQualifying = isQualifying
                     )

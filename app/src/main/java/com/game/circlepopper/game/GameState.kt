@@ -24,6 +24,8 @@ data class GameState(
     val misses: Int = 0,
     val gameStartTime: Long = 0L,
     val slowMotionEndTime: Long = 0L,
+    val bombDodgeEndTime: Long = 0L,
+    val bombSacrificeEndTime: Long = 0L,
     val highscores: List<Highscore> = emptyList(),
     val isHighscoreQualifying: Boolean = false,
     val highscoreSaved: Boolean = false,
