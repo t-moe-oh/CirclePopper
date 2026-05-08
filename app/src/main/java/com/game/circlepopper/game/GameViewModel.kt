@@ -314,6 +314,11 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             val dx = x - circle.centerX
             val dy = y - circle.centerY
             dx * dx + dy * dy <= circle.radius * circle.radius
+        } ?: s.circles.find { circle ->
+            circle.trail.any { (tx, ty) ->
+                val dx = x - tx; val dy = y - ty
+                dx * dx + dy * dy <= circle.radius * circle.radius
+            }
         }
 
         if (hit != null) {
@@ -399,7 +404,8 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
                 circle.copy(
                     centerX = newX, centerY = newY,
-                    velocityX = vx, velocityY = vy
+                    velocityX = vx, velocityY = vy,
+                    trail = (circle.trail + Pair(newX, newY)).takeLast(12)
                 )
             }
 

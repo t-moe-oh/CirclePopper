@@ -62,6 +62,8 @@ import kotlin.math.sin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 
+private const val SHOW_TRAILS = false
+
 @Composable
 fun CirclePopperApp(
     viewModel: GameViewModel,
@@ -304,6 +306,17 @@ private fun GameScreen(state: GameState, onTap: (Float, Float) -> Unit) {
                     (normalized * 0.80 + 0.20).toFloat()
                 } else {
                     1f
+                }
+
+                if (SHOW_TRAILS) {
+                    circle.trail.forEachIndexed { i, (tx, ty) ->
+                        val trailAlpha = (i + 1).toFloat() / (circle.trail.size + 1) * 0.4f
+                        drawCircle(
+                            color = circle.color.copy(alpha = trailAlpha),
+                            radius = circle.radius,
+                            center = Offset(tx, ty)
+                        )
+                    }
                 }
 
                 drawCircle(
