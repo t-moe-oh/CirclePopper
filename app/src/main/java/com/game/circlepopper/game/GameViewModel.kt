@@ -138,10 +138,17 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         if (bonusUntil <= 0) {
             spawnBonusCircle()
             bonusUntil = Random.nextInt(8, 13)
+        } else if (Random.nextFloat() < 0.15f && bombCount() < 2) {
+            spawnBombCircle()
+            bonusUntil--
         } else {
             spawnNormalCircle()
             bonusUntil--
         }
+    }
+
+    private fun bombCount(): Int {
+        return _state.value.circles.count { it.isBomb }
     }
 
     private fun spawnNormalCircle() {
@@ -165,6 +172,19 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             radius = radius * 1.3f, color = goldColor,
             createdAt = System.currentTimeMillis(),
             isBonus = true
+        )
+        _state.update { it.copy(circles = it.circles + circle) }
+    }
+
+    private fun spawnBombCircle() {
+        val (x, y, radius, vx, vy, ax, ay, _) = commonSpawnParams()
+        val circle = GameCircle(
+            id = nextId++, centerX = x, centerY = y,
+            velocityX = vx, velocityY = vy,
+            accelX = ax, accelY = ay,
+            radius = radius * 1.2f, color = Color(0xFF1A1A1A),
+            createdAt = System.currentTimeMillis(),
+            isBomb = true
         )
         _state.update { it.copy(circles = it.circles + circle) }
     }
@@ -207,12 +227,16 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         val now = System.currentTimeMillis()
         val expired = _state.value.circles.filter { now - it.createdAt > 4000L }
         if (expired.isEmpty()) return
-        Log.d(TAG, "expired=${expired.size}, misses=${_state.value.misses + expired.size}")
-        vibrateStrong()
-        soundManager?.playBoop()
+        val expiredNonBomb = expired.filter { !it.isBomb }
+        if (expiredNonBomb.isNotEmpty()) {
+            Log.d(TAG, "expired=${expiredNonBomb.size}, misses=${_state.value.misses + expiredNonBomb.size}")
+            vibrateStrong()
+            soundManager?.playBoop()
+        }
+        val expiredBombs = expired.size - expiredNonBomb.size
 
         _state.update { state ->
-            val newMisses = state.misses + expired.size
+            val newMisses = state.misses + expiredNonBomb.size
             val gameOver = newMisses >= 5
             val highscores = if (gameOver) highscoreManager.getHighscores() else emptyList()
             val isQualifying = if (gameOver) highscoreManager.isQualifying(state.score) else false
@@ -340,22 +364,24 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         }
 
         if (hit != null) {
-            _state.update {
-                if (hit.isBonus) {
-                    val now = System.currentTimeMillis()
+            if (hit.isBomb) {
+                _state.update {
+                    it.copy(
+                        circles = emptyList(),
+                        score = it.score + 1,
+                        misses = it.misses + 1
+                    )
+                }
+                soundManager?.playBoom()
+            } else if (hit.isBonus) {
+                val now = System.currentTimeMillis()
+                _state.update {
                     it.copy(
                         circles = it.circles - hit,
                         score = it.score + 1,
                         slowMotionEndTime = now + 3000L
                     )
-                } else {
-                    it.copy(
-                        circles = it.circles - hit,
-                        score = it.score + 1
-                    )
                 }
-            }
-            if (hit.isBonus) {
                 _state.update { state ->
                     state.copy(
                         circles = state.circles.map { c ->
@@ -364,6 +390,13 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                                 velocityY = c.velocityY * 0.1f
                             )
                         }
+                    )
+                }
+            } else {
+                _state.update {
+                    it.copy(
+                        circles = it.circles - hit,
+                        score = it.score + 1
                     )
                 }
             }

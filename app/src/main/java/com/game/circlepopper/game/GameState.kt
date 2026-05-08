@@ -14,6 +14,7 @@ data class GameCircle(
     val color: Color,
     val createdAt: Long,
     val isBonus: Boolean = false,
+    val isBomb: Boolean = false,
     val trail: List<Pair<Float, Float>> = emptyList()
 )
 

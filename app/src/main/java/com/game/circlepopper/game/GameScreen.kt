@@ -361,6 +361,24 @@ private fun GameScreen(state: GameState, onTap: (Float, Float) -> Unit) {
                         rotation = rotation.toFloat()
                     )
                     drawPath(starPath, color = Color.White, style = Stroke(width = 3f))
+                } else if (circle.isBomb) {
+                    drawCircle(
+                        color = Color(0xFFFF0000).copy(alpha = alpha * 0.4f),
+                        radius = circle.radius + 6f,
+                        center = Offset(circle.centerX, circle.centerY),
+                        style = Stroke(width = 3f)
+                    )
+                    val bombRotation = (now / 5) % 360
+                    val rad = bombRotation.toFloat() * PI.toFloat() / 180f
+                    val cosR = cos(rad)
+                    val sinR = sin(rad)
+                    val len = circle.radius * 0.65f
+                    val x1 = circle.centerX + len * cosR; val y1 = circle.centerY + len * sinR
+                    val x2 = circle.centerX - len * cosR; val y2 = circle.centerY - len * sinR
+                    val x3 = circle.centerX + len * -sinR; val y3 = circle.centerY + len * cosR
+                    val x4 = circle.centerX - len * -sinR; val y4 = circle.centerY - len * cosR
+                    drawLine(Color.Red, Offset(x1, y1), Offset(x2, y2), strokeWidth = 4f)
+                    drawLine(Color.Red, Offset(x3, y3), Offset(x4, y4), strokeWidth = 4f)
                 } else {
                     drawCircle(
                         color = circle.color.copy(alpha = alpha * 0.3f),
