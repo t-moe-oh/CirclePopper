@@ -30,6 +30,7 @@ data class GameState(
     val showSettings: Boolean = false,
     val showDebugMenu: Boolean = false,
     val showTrails: Boolean = false,
+    val trailLength: Int = 12,
     val showGameOverOverlay: Boolean = false,
     val isPaused: Boolean = false,
     val resumeCountdown: Int = 0,

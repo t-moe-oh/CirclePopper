@@ -28,6 +28,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -59,6 +61,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlin.math.PI
 import kotlin.math.cos
+import kotlin.math.roundToInt
 import kotlin.math.sin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -136,7 +139,9 @@ fun CirclePopperApp(
             state.showDebugMenu -> {
                 DebugMenuScreen(
                     showTrails = state.showTrails,
+                    trailLength = state.trailLength,
                     onToggleTrails = viewModel::toggleTrails,
+                    onSetTrailLength = viewModel::setTrailLength,
                     onBack = viewModel::hideDebugMenu
                 )
             }
@@ -621,7 +626,9 @@ private fun HighscoreListScreen(highscores: List<Highscore>, onBack: () -> Unit)
 @Composable
 private fun DebugMenuScreen(
     showTrails: Boolean,
+    trailLength: Int,
     onToggleTrails: (Boolean) -> Unit,
+    onSetTrailLength: (Int) -> Unit,
     onBack: () -> Unit
 ) {
     Box(
@@ -645,6 +652,14 @@ private fun DebugMenuScreen(
                 icon = "👁",
                 checked = showTrails,
                 onCheckedChange = onToggleTrails
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            SettingsSlider(
+                label = "Trail Length",
+                value = trailLength,
+                onValueChange = onSetTrailLength
             )
 
             Spacer(modifier = Modifier.height(48.dp))
@@ -806,6 +821,37 @@ private fun SettingsRow(label: String, icon: String, checked: Boolean, onChecked
             colors = SwitchDefaults.colors(
                 checkedThumbColor = Color(0xFFE94560),
                 checkedTrackColor = Color(0xFFE94560).copy(alpha = 0.3f)
+            )
+        )
+    }
+}
+
+@Composable
+private fun SettingsSlider(
+    label: String,
+    value: Int,
+    onValueChange: (Int) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 48.dp)
+    ) {
+        Text(
+            text = "$label: $value",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White
+        )
+        Slider(
+            value = value.toFloat(),
+            onValueChange = { onValueChange(it.roundToInt()) },
+            valueRange = 0f..30f,
+            steps = 29,
+            colors = SliderDefaults.colors(
+                thumbColor = Color(0xFFE94560),
+                activeTrackColor = Color(0xFFE94560),
+                inactiveTrackColor = Color(0xFFE94560).copy(alpha = 0.2f)
             )
         )
     }
