@@ -1,6 +1,5 @@
 package com.game.circlepopper.game
 
-import android.app.Activity
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -50,7 +49,7 @@ import com.game.circlepopper.game.platform.SensorEffect
 import com.game.circlepopper.game.platform.SoundController
 import com.game.circlepopper.game.platform.StorageController
 import com.game.circlepopper.game.platform.VibrationController
-import androidx.compose.ui.platform.LocalContext
+import com.game.circlepopper.game.platform.currentTimeMillis
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -71,11 +70,10 @@ fun CirclePopperApp(
     vibrationController: VibrationController,
     soundController: SoundController,
     musicController: MusicController,
-    storageController: StorageController
+    storageController: StorageController,
+    onQuit: () -> Unit = {}
 ) {
     val state by viewModel.state.collectAsState()
-
-    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         viewModel.setStorageController(storageController)
@@ -145,7 +143,7 @@ fun CirclePopperApp(
                     onHighscores = viewModel::showHighscoreList,
                     onSettings = viewModel::showSettings,
                     onDebugMenu = viewModel::showDebugMenu,
-                    onQuit = { (context as? Activity)?.finish() }
+                    onQuit = onQuit
                 )
             }
 
@@ -293,7 +291,7 @@ private fun GameScreen(state: GameState, onTap: (Float, Float) -> Unit) {
     LaunchedEffect(Unit) {
         while (isActive) {
             withFrameNanos {
-                frameTimeMs = System.currentTimeMillis()
+                frameTimeMs = currentTimeMillis()
             }
         }
     }
@@ -436,7 +434,7 @@ private fun TimerDisplay(gameStartTime: Long, currentTime: Long, modifier: Modif
     val minutes = elapsed / 60
     val seconds = elapsed % 60
     Text(
-        text = "%02d:%02d".format(minutes, seconds),
+        text = "$minutes:${if (seconds < 10) "0" else ""}$seconds",
         modifier = modifier.fillMaxWidth().padding(bottom = 24.dp),
         textAlign = TextAlign.Center,
         fontSize = 22.sp,

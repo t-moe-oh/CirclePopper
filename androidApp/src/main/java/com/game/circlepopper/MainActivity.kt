@@ -48,7 +48,8 @@ class MainActivity : ComponentActivity() {
                 vibrationController = vibrationController,
                 soundController = soundController,
                 musicController = musicController,
-                storageController = storageController
+                storageController = storageController,
+                onQuit = { finish() }
             )
         }
     }

@@ -5,6 +5,7 @@ import com.game.circlepopper.game.platform.MusicController
 import com.game.circlepopper.game.platform.SoundController
 import com.game.circlepopper.game.platform.StorageController
 import com.game.circlepopper.game.platform.VibrationController
+import com.game.circlepopper.game.platform.currentTimeMillis
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -96,7 +97,7 @@ class GameViewModel {
     fun startGame(widthPx: Float, heightPx: Float) {
         screenWidth = widthPx; screenHeight = heightPx
         nextId = 0L; bonusUntil = 0
-        gameStartTime = System.currentTimeMillis()
+        gameStartTime = currentTimeMillis()
         val s = _state.value
         _state.value = GameState(
             isPlaying = true, gameStartTime = gameStartTime,
@@ -144,7 +145,7 @@ class GameViewModel {
         val (x, y, radius, vx, vy, ax, ay, color) = commonSpawnParams()
         val circle = GameCircle(id = nextId++, centerX = x, centerY = y,
             velocityX = vx, velocityY = vy, accelX = ax, accelY = ay,
-            radius = radius, color = color, createdAt = System.currentTimeMillis())
+            radius = radius, color = color, createdAt = currentTimeMillis())
         _state.update { it.copy(circles = it.circles + circle) }
     }
 
@@ -153,7 +154,7 @@ class GameViewModel {
         val circle = GameCircle(id = nextId++, centerX = x, centerY = y,
             velocityX = vx, velocityY = vy, accelX = ax, accelY = ay,
             radius = radius * 1.3f, color = goldColor,
-            createdAt = System.currentTimeMillis(), isBonus = true)
+            createdAt = currentTimeMillis(), isBonus = true)
         _state.update { it.copy(circles = it.circles + circle) }
     }
 
@@ -162,7 +163,7 @@ class GameViewModel {
         val circle = GameCircle(id = nextId++, centerX = x, centerY = y,
             velocityX = vx, velocityY = vy, accelX = ax, accelY = ay,
             radius = radius * 1.2f, color = Color(0xFF1A1A1A),
-            createdAt = System.currentTimeMillis(), isBomb = true)
+            createdAt = currentTimeMillis(), isBomb = true)
         _state.update { it.copy(circles = it.circles + circle) }
     }
 
@@ -192,7 +193,7 @@ class GameViewModel {
     private fun spawnInterval() = (400f + 1600f * exp(-_state.value.score / 15f)).toLong().coerceAtLeast(400L)
 
     private fun cleanupExpiredCircles() {
-        val now = System.currentTimeMillis()
+        val now = currentTimeMillis()
         val expired = _state.value.circles.filter { now - it.createdAt > 4000L }
         if (expired.isEmpty()) return
         val expiredNonBomb = expired.filter { !it.isBomb }
@@ -259,7 +260,7 @@ class GameViewModel {
     fun pauseGame() {
         println("$TAG pauseGame() called, isPlaying=${_state.value.isPlaying}")
         if (_state.value.isPlaying) {
-            pauseStartTime = System.currentTimeMillis()
+            pauseStartTime = currentTimeMillis()
             _state.update { it.copy(isPaused = true) }
         }
     }
@@ -272,7 +273,7 @@ class GameViewModel {
             delay(1000L); _state.update { it.copy(resumeCountdown = 2) }
             delay(1000L); _state.update { it.copy(resumeCountdown = 1) }
             delay(1000L)
-            val now = System.currentTimeMillis()
+            val now = currentTimeMillis()
             val pauseDuration = now - pauseStartTime
             _state.update {
                 it.copy(resumeCountdown = 0, isPaused = false,
@@ -303,7 +304,7 @@ class GameViewModel {
                     it.copy(circles = emptyList(), score = it.score + 1, misses = newMisses,
                         isGameOver = gameOver, isPlaying = if (gameOver) false else it.isPlaying,
                         showGameOverOverlay = gameOver,
-                        bombSacrificeEndTime = System.currentTimeMillis() + 2000L,
+                        bombSacrificeEndTime = currentTimeMillis() + 2000L,
                         highscores = h ?: emptyList(),
                         isHighscoreQualifying = if (gameOver) highscoreManager?.isQualifying(it.score) ?: false else false)
                 }
@@ -311,7 +312,7 @@ class GameViewModel {
                 soundController?.playBoom()
                 if (_state.value.settingsHaptics) vibrationController?.vibrateStrong()
             } else if (hit.isBonus) {
-                val now = System.currentTimeMillis()
+                val now = currentTimeMillis()
                 _state.update { it.copy(circles = it.circles - hit, score = it.score + 1, slowMotionEndTime = now + 3000L) }
                 _state.update { state ->
                     state.copy(circles = state.circles.map { c -> c.copy(velocityX = c.velocityX * 0.1f, velocityY = c.velocityY * 0.1f) })
@@ -323,10 +324,10 @@ class GameViewModel {
     }
 
     private suspend fun movementLoop() {
-        var lastUpdate = System.currentTimeMillis()
+        var lastUpdate = currentTimeMillis()
         while (currentCoroutineContext().isActive) {
-            if (_state.value.isPaused) { delay(50); lastUpdate = System.currentTimeMillis(); continue }
-            val now = System.currentTimeMillis()
+            if (_state.value.isPaused) { delay(50); lastUpdate = currentTimeMillis(); continue }
+            val now = currentTimeMillis()
             val dt = now - lastUpdate
             if (dt > 0L) updatePositions(dt)
             lastUpdate = now; delay(16L)
@@ -334,7 +335,7 @@ class GameViewModel {
     }
 
     private fun gravityMultiplier(): Float {
-        val elapsed = System.currentTimeMillis() - gameStartTime
+        val elapsed = currentTimeMillis() - gameStartTime
         return minOf(5f, 1f + elapsed / 1000f * 0.05f)
     }
 
@@ -345,7 +346,7 @@ class GameViewModel {
             val dt = dtMs.toFloat(); val gravMul = gravityMultiplier()
             val realGravX = if (state.settingsRealGravity) -tiltX * realGravityScale else 0f
             val realGravY = if (state.settingsRealGravity) tiltY * realGravityScale else 0f
-            val slowMo = if (state.slowMotionEndTime > System.currentTimeMillis()) 0.1f else 1f
+            val slowMo = if (state.slowMotionEndTime > currentTimeMillis()) 0.1f else 1f
             var updatedCircles = state.circles.map { circle ->
                 var vx = circle.velocityX + (circle.accelX * gravMul + realGravX) * dt * slowMo
                 var vy = circle.velocityY + (circle.accelY * gravMul + realGravY) * dt * slowMo
