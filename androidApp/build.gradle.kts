@@ -1,6 +1,6 @@
 plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.plugin.compose")
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.compose)
 }
 
 android {
@@ -42,6 +42,6 @@ base {
 
 dependencies {
     implementation(project(":app"))
-    implementation("androidx.activity:activity-compose:1.10.0")
-    implementation("androidx.compose.ui:ui-tooling-preview:1.7.8")
+    implementation(libs.activity.compose)
+    implementation(libs.compose.ui.tooling.preview)
 }

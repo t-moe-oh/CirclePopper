@@ -1,8 +1,8 @@
 plugins {
-    kotlin("multiplatform")
-    id("org.jetbrains.compose")
-    id("org.jetbrains.kotlin.plugin.compose")
-    id("com.android.kotlin.multiplatform.library")
+    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.compose.multiplatform)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.android.multiplatform.library)
 }
 
 kotlin {
@@ -27,12 +27,12 @@ kotlin {
             implementation(compose.foundation)
             implementation(compose.material3)
             implementation(compose.ui)
-            implementation("org.jetbrains.androidx.lifecycle:lifecycle-viewmodel:2.9.6")
-            implementation("org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose:2.9.6")
+            implementation(libs.lifecycle.viewmodel)
+            implementation(libs.lifecycle.viewmodel.compose)
         }
         androidMain.dependencies {
-            implementation("androidx.activity:activity-compose:1.10.0")
-            implementation("androidx.core:core-ktx:1.15.0")
+            implementation(libs.activity.compose)
+            implementation(libs.core.ktx)
         }
     }
 }
