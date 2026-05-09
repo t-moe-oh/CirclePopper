@@ -11,7 +11,6 @@ import android.view.WindowInsetsController
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.lifecycle.ViewModelProvider
 import com.game.circlepopper.game.CirclePopperApp
 import com.game.circlepopper.game.GameViewModel
 import com.game.circlepopper.game.platform.AndroidMusicController
@@ -32,12 +31,12 @@ class MainActivity : ComponentActivity() {
         AndroidVibrationController(vibrator)
     }
 
-    private val soundController by lazy { AndroidSoundController(this) }
-    private val musicController by lazy { AndroidMusicController(this) }
-    private val storageController by lazy { AndroidStorageController(this) }
-    private val viewModel: GameViewModel by lazy {
-        ViewModelProvider(this)[GameViewModel::class.java]
+    private val soundController by lazy {
+        AndroidSoundController(this, R.raw.plink_wall, R.raw.plink_circle, R.raw.boop, R.raw.boom)
     }
+    private val musicController by lazy { AndroidMusicController(this, R.raw.menu_music) }
+    private val storageController by lazy { AndroidStorageController(this) }
+    private val viewModel by lazy { GameViewModel() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

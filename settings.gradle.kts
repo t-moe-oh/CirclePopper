@@ -14,4 +14,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "CirclePopper"
-include(":app")
+include(":app", ":androidApp")

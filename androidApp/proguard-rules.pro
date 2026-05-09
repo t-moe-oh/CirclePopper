@@ -1,0 +1,2 @@
+-keep class com.game.circlepopper.** { *; }
+-dontwarn org.jetbrains.annotations.**

@@ -1,15 +1,6 @@
 package com.game.circlepopper.game
 
 import android.app.Activity
-import android.content.Context
-import android.hardware.Sensor
-import android.hardware.SensorEvent
-import android.hardware.SensorEventListener
-import android.hardware.SensorManager
-import com.game.circlepopper.game.platform.MusicController
-import com.game.circlepopper.game.platform.SoundController
-import com.game.circlepopper.game.platform.StorageController
-import com.game.circlepopper.game.platform.VibrationController
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -54,6 +45,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import com.game.circlepopper.game.platform.MusicController
+import com.game.circlepopper.game.platform.SensorEffect
+import com.game.circlepopper.game.platform.SoundController
+import com.game.circlepopper.game.platform.StorageController
+import com.game.circlepopper.game.platform.VibrationController
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
@@ -106,22 +102,7 @@ fun CirclePopperApp(
         onDispose { musicController.stopMenuMusic() }
     }
 
-    DisposableEffect(context) {
-        val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
-        val sensor = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
-        if (sensor != null) {
-            val listener = object : SensorEventListener {
-                override fun onSensorChanged(event: SensorEvent) {
-                    viewModel.setTilt(event.values[0], event.values[1])
-                }
-                override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) {}
-            }
-            sensorManager.registerListener(listener, sensor, SensorManager.SENSOR_DELAY_GAME)
-            onDispose { sensorManager.unregisterListener(listener) }
-        } else {
-            onDispose { }
-        }
-    }
+    SensorEffect(viewModel = viewModel)
 
     BoxWithConstraints {
         val density = LocalDensity.current

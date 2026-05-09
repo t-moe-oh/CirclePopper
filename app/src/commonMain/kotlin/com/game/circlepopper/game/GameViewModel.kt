@@ -1,14 +1,14 @@
 package com.game.circlepopper.game
 
-import android.util.Log
 import androidx.compose.ui.graphics.Color
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.game.circlepopper.game.platform.MusicController
 import com.game.circlepopper.game.platform.SoundController
 import com.game.circlepopper.game.platform.StorageController
 import com.game.circlepopper.game.platform.VibrationController
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,15 +25,16 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 import kotlin.random.Random
 
-class GameViewModel : ViewModel() {
+class GameViewModel {
 
     companion object {
         private const val TAG = "CirclePopper"
     }
 
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+
     private val _state = MutableStateFlow(GameState())
     val state: StateFlow<GameState> = _state.asStateFlow()
-
     private var storageController: StorageController? = null
     private var highscoreManager: HighscoreManager? = null
     private var vibrationController: VibrationController? = null
@@ -105,7 +106,7 @@ class GameViewModel : ViewModel() {
             showTrails = s.showTrails, trailLength = s.trailLength,
         )
         gameLoopJob?.cancel()
-        gameLoopJob = viewModelScope.launch {
+        gameLoopJob = scope.launch {
             launch { spawnLoop() }
             launch { movementLoop() }
             launch { cleanupLoop() }
@@ -196,7 +197,7 @@ class GameViewModel : ViewModel() {
         if (expired.isEmpty()) return
         val expiredNonBomb = expired.filter { !it.isBomb }
         if (expiredNonBomb.isNotEmpty()) {
-            Log.d(TAG, "expired=${expiredNonBomb.size}, misses=${_state.value.misses + expiredNonBomb.size}")
+            println("$TAG expired=${expiredNonBomb.size}, misses=${_state.value.misses + expiredNonBomb.size}")
             if (_state.value.settingsHaptics) vibrationController?.vibrateStrong()
             soundController?.playBoop()
         }
@@ -256,7 +257,7 @@ class GameViewModel : ViewModel() {
     fun clearGameOverOverlay() { _state.update { it.copy(showGameOverOverlay = false) } }
 
     fun pauseGame() {
-        Log.d(TAG, "pauseGame() called, isPlaying=${_state.value.isPlaying}")
+        println("$TAG pauseGame() called, isPlaying=${_state.value.isPlaying}")
         if (_state.value.isPlaying) {
             pauseStartTime = System.currentTimeMillis()
             _state.update { it.copy(isPaused = true) }
@@ -267,7 +268,7 @@ class GameViewModel : ViewModel() {
         if (!_state.value.isPaused) return
         _state.update { it.copy(resumeCountdown = 3) }
         countdownJob?.cancel()
-        countdownJob = viewModelScope.launch {
+        countdownJob = scope.launch {
             delay(1000L); _state.update { it.copy(resumeCountdown = 2) }
             delay(1000L); _state.update { it.copy(resumeCountdown = 1) }
             delay(1000L)

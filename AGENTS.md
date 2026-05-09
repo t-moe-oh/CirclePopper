@@ -3,24 +3,46 @@
 ## Build
 
 ```sh
+export JAVA_HOME=/usr/lib/jvm/java-21-openjdk
 export ANDROID_HOME=/opt/android-sdk
-./gradlew assembleRelease      # release APK → app/build/outputs/apk/release/CirclePopper-release.apk (3.4MB, signed)
-./gradlew assembleDebug        # debug APK (larger, unsigned)
+./gradlew :androidApp:assembleRelease   # release APK → androidApp/build/outputs/apk/release/CirclePopper-release.apk (2.6MB, signed)
+./gradlew :androidApp:assembleDebug     # debug APK
 ```
 
-JDK 25 is installed and supported since Gradle 9.5.0 + AGP 9.2.1.
+JDK 25 is installed but Gradle 9.5.0 + AGP 9.2.1 have intermittent aapt2 compatibility issues with it.
+Use JDK 21 for reliable builds.
 
 ## Project structure
 
-Single-module Android app with Jetpack Compose + Material 3.
+Kotlin Multiplatform project with two modules:
 
 ```
-app/src/main/java/com/game/circlepopper/
-  MainActivity.kt          # Entry: enableEdgeToEdge + setContent
-  game/
-    GameState.kt           # GameCircle + GameState data classes
-    GameViewModel.kt       # All game logic (coroutine loops)
-    GameScreen.kt          # All Compose UI (Menu, Game, GameOver + HUD)
+androidApp/                              # Pure Android entry point
+  src/main/java/.../MainActivity.kt      # Entry: creates controllers, calls CirclePopperApp
+  build.gradle.kts                       # com.android.application
+
+app/                                     # KMP shared library
+  src/
+    commonMain/kotlin/.../game/
+      GameState.kt                       # GameCircle + GameState data classes
+      GameViewModel.kt                   # All game logic (coroutine loops)
+      GameScreen.kt                      # All Compose UI (Menu, Game, GameOver + HUD)
+      HighscoreManager.kt                # Highscore persistence via StorageController
+      platform/
+        VibrationController.kt           # expect interface
+        SoundController.kt               # expect interface
+        MusicController.kt               # expect interface
+        StorageController.kt             # expect interface
+        SensorEffect.kt                  # expect composable
+    androidMain/kotlin/.../game/platform/
+      AndroidVibrationController.kt      # actual (Vibrator API)
+      AndroidSoundController.kt          # actual (SoundPool)
+      AndroidMusicController.kt          # actual (MediaPlayer)
+      AndroidStorageController.kt        # actual (SharedPreferences)
+      SensorEffect.kt                    # actual (SensorManager)
+    iosMain/kotlin/.../game/platform/
+      SensorEffect.kt                    # stub (no-op)
+  build.gradle.kts                       # com.android.kotlin.multiplatform.library
 ```
 
 ## Architecture
@@ -54,7 +76,7 @@ All loops check `currentCoroutineContext().isActive` and are cancelled via `game
 - **Bonus star:** Golden circle with rotating white star, spawns every 8–12 taps. Hitting it triggers 3-second slow-motion (10% speed) for all circles.
 - **Difficulty:** spawn interval = `max(400ms, 1500ms - score × 30)`
 - **Misses:** 5 → game over
-- **Highscores:** Top 5 persisted via SharedPreferences (JSON-like `name|score;` format). `HighscoreManager` checks qualifying, inserts sorted, trims to 5. UI has dedicated list screen and name entry on game over.
+- **Highscores:** Top 5 persisted via `StorageController` (interface). `HighscoreManager` checks qualifying, inserts sorted, trims to 5.
 
 ## Canvas + animation
 
@@ -70,12 +92,16 @@ All loops check `currentCoroutineContext().isActive` and are cancelled via `game
 | minSdk | 23 |
 | version | 1.3 |
 | AGP | 9.2.1 |
-| Kotlin | 2.3.21 |
-| Compose BOM | 2026.04.01 |
+| Kotlin | 2.1.0 |
+| Compose Multiplatform | 1.10.3 |
 | Gradle | 9.5.0 |
 | Build tools | 36.0.0 |
 
-No longer needed — `android-37` platform properly detected by AGP 9.2.1.
+## KMP / iOS
+
+All platform abstractions are in place (VibrationController, SoundController, MusicController,
+StorageController, SensorEffect) with Android implementations in `androidMain`. iOS targets
+are configured but don't compile on Linux (need macOS + Xcode). iOS stubs are in `iosMain`.
 
 ## Conventions
 
