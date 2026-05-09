@@ -2,11 +2,8 @@ package com.game.circlepopper.game
 
 import android.app.Application
 import android.content.Context
-import android.os.Build
-import android.os.VibrationAttributes
-import android.os.VibrationEffect
-import android.os.Vibrator
 import android.util.Log
+import com.game.circlepopper.game.platform.VibrationController
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -66,11 +63,11 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private val highscoreManager = HighscoreManager(application)
-    private var vibrator: Vibrator? = null
+    private var vibrationController: VibrationController? = null
     private var soundManager: SoundManager? = null
 
-    fun setVibrator(vib: Vibrator) {
-        vibrator = vib
+    fun setVibrationController(ctrl: VibrationController) {
+        vibrationController = ctrl
     }
 
     fun setSoundManager(sm: SoundManager) {
@@ -230,7 +227,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         val expiredNonBomb = expired.filter { !it.isBomb }
         if (expiredNonBomb.isNotEmpty()) {
             Log.d(TAG, "expired=${expiredNonBomb.size}, misses=${_state.value.misses + expiredNonBomb.size}")
-            vibrateStrong()
+            if (_state.value.settingsHaptics) vibrationController?.vibrateStrong()
             soundManager?.playBoop()
         }
         val expiredBombs = expired.size - expiredNonBomb.size
@@ -388,7 +385,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                     gameLoopJob?.cancel()
                 }
                 soundManager?.playBoom()
-                vibrateStrong()
+                if (_state.value.settingsHaptics) vibrationController?.vibrateStrong()
             } else if (hit.isBonus) {
                 val now = System.currentTimeMillis()
                 _state.update {
@@ -484,10 +481,10 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         }
 
         if (hitCircle) {
-            vibrateLight()
+            if (_state.value.settingsHaptics) vibrationController?.vibrateLight()
             soundManager?.playCircleHit()
         } else if (hitWall) {
-            vibrateLight()
+            if (_state.value.settingsHaptics) vibrationController?.vibrateLight()
             soundManager?.playWallBump()
         }
     }
@@ -539,38 +536,6 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
         return Pair(result, hit)
-    }
-
-    private fun vibrateLight() {
-        if (!_state.value.settingsHaptics) return
-        val vib = vibrator ?: return
-        Log.d(TAG, "vibrateLight()")
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            val attrs = VibrationAttributes.Builder()
-                .setUsage(VibrationAttributes.USAGE_PHYSICAL_EMULATION)
-                .build()
-            vib.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_TICK), attrs)
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            vib.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_TICK))
-        } else {
-            vib.vibrate(VibrationEffect.createOneShot(30L, 100))
-        }
-    }
-
-    private fun vibrateStrong() {
-        if (!_state.value.settingsHaptics) return
-        val vib = vibrator ?: return
-        Log.d(TAG, "vibrateStrong()")
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            val attrs = VibrationAttributes.Builder()
-                .setUsage(VibrationAttributes.USAGE_PHYSICAL_EMULATION)
-                .build()
-            vib.vibrate(VibrationEffect.createOneShot(500L, 255), attrs)
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            vib.vibrate(VibrationEffect.createOneShot(500L, 255))
-        } else {
-            vib.vibrate(VibrationEffect.createOneShot(500L, 255))
-        }
     }
 
     fun resetGame() {

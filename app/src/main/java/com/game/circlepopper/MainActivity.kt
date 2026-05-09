@@ -16,17 +16,19 @@ import com.game.circlepopper.game.CirclePopperApp
 import com.game.circlepopper.game.GameViewModel
 import com.game.circlepopper.game.MusicManager
 import com.game.circlepopper.game.SoundManager
+import com.game.circlepopper.game.platform.AndroidVibrationController
 
 class MainActivity : ComponentActivity() {
 
-    private val vibrator: Vibrator by lazy {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+    private val vibrationController by lazy {
+        val vibrator: Vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val vm = getSystemService(VibratorManager::class.java)!!
             vm.defaultVibrator
         } else {
             @Suppress("DEPRECATION")
             getSystemService(Vibrator::class.java)!!
         }
+        AndroidVibrationController(vibrator)
     }
 
     private val soundManager by lazy { SoundManager(this) }
@@ -40,7 +42,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         hideSystemBars()
         setContent {
-            CirclePopperApp(viewModel = viewModel, vibrator = vibrator, soundManager = soundManager, musicManager = musicManager)
+            CirclePopperApp(viewModel = viewModel, vibrationController = vibrationController, soundManager = soundManager, musicManager = musicManager)
         }
     }
 

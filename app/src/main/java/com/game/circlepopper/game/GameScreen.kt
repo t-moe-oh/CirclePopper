@@ -6,7 +6,7 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
-import android.os.Vibrator
+import com.game.circlepopper.game.platform.VibrationController
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -69,7 +69,7 @@ import kotlinx.coroutines.isActive
 @Composable
 fun CirclePopperApp(
     viewModel: GameViewModel,
-    vibrator: Vibrator,
+    vibrationController: VibrationController,
     soundManager: SoundManager,
     musicManager: MusicManager
 ) {
@@ -77,8 +77,8 @@ fun CirclePopperApp(
 
     val context = LocalContext.current
 
-    LaunchedEffect(vibrator) {
-        viewModel.setVibrator(vibrator)
+    LaunchedEffect(vibrationController) {
+        viewModel.setVibrationController(vibrationController)
     }
 
     LaunchedEffect(soundManager) {
