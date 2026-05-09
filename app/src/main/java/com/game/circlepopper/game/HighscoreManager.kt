@@ -1,16 +1,15 @@
 package com.game.circlepopper.game
 
-import android.content.Context
+import com.game.circlepopper.game.platform.StorageController
 
 data class Highscore(val name: String, val score: Int)
 
-class HighscoreManager(context: Context) {
+class HighscoreManager(private val storage: StorageController) {
 
-    private val prefs = context.getSharedPreferences("highscores", Context.MODE_PRIVATE)
     private val maxEntries = 5
 
     fun getHighscores(): List<Highscore> {
-        val raw = prefs.getString(KEY, null) ?: return emptyList()
+        val raw = storage.getString(KEY) ?: return emptyList()
         return try {
             raw.split(SEPARATOR).map { entry ->
                 val parts = entry.split(FIELD_SEPARATOR)
@@ -33,7 +32,7 @@ class HighscoreManager(context: Context) {
             .take(maxEntries)
 
         val raw = highscores.joinToString(SEPARATOR) { "${it.name}$FIELD_SEPARATOR${it.score}" }
-        prefs.edit().putString(KEY, raw).apply()
+        storage.putString(KEY, raw)
         return highscores
     }
 

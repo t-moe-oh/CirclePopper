@@ -1,11 +1,11 @@
-package com.game.circlepopper.game
+package com.game.circlepopper.game.platform
 
 import android.content.Context
 import android.media.AudioAttributes
 import android.media.SoundPool
 import com.game.circlepopper.R
 
-class SoundManager(context: Context) {
+class AndroidSoundController(private val ctx: Context) : SoundController {
 
     private val soundPool: SoundPool
     private val wallPlinkId: Int
@@ -24,25 +24,25 @@ class SoundManager(context: Context) {
             .setAudioAttributes(attrs)
             .build()
 
-        wallPlinkId = soundPool.load(context, R.raw.plink_wall, 1)
-        circlePlinkId = soundPool.load(context, R.raw.plink_circle, 1)
-        boopId = soundPool.load(context, R.raw.boop, 1)
-        boomId = soundPool.load(context, R.raw.boom, 1)
+        wallPlinkId = soundPool.load(ctx, R.raw.plink_wall, 1)
+        circlePlinkId = soundPool.load(ctx, R.raw.plink_circle, 1)
+        boopId = soundPool.load(ctx, R.raw.boop, 1)
+        boomId = soundPool.load(ctx, R.raw.boom, 1)
     }
 
-    fun playWallBump() {
+    override fun playWallBump() {
         soundPool.play(wallPlinkId, 0.5f, 0.5f, 1, 0, 1f)
     }
 
-    fun playCircleHit() {
+    override fun playCircleHit() {
         soundPool.play(circlePlinkId, 0.5f, 0.5f, 1, 0, 1f)
     }
 
-    fun playBoop() {
+    override fun playBoop() {
         soundPool.play(boopId, 0.5f, 0.5f, 1, 0, 1f)
     }
 
-    fun playBoom() {
+    override fun playBoom() {
         soundPool.play(boomId, 0.7f, 0.7f, 1, 0, 1f)
     }
 }

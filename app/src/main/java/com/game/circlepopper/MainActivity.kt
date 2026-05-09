@@ -14,8 +14,9 @@ import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.ViewModelProvider
 import com.game.circlepopper.game.CirclePopperApp
 import com.game.circlepopper.game.GameViewModel
-import com.game.circlepopper.game.MusicManager
-import com.game.circlepopper.game.SoundManager
+import com.game.circlepopper.game.platform.AndroidMusicController
+import com.game.circlepopper.game.platform.AndroidSoundController
+import com.game.circlepopper.game.platform.AndroidStorageController
 import com.game.circlepopper.game.platform.AndroidVibrationController
 
 class MainActivity : ComponentActivity() {
@@ -31,8 +32,9 @@ class MainActivity : ComponentActivity() {
         AndroidVibrationController(vibrator)
     }
 
-    private val soundManager by lazy { SoundManager(this) }
-    private val musicManager by lazy { MusicManager(this) }
+    private val soundController by lazy { AndroidSoundController(this) }
+    private val musicController by lazy { AndroidMusicController(this) }
+    private val storageController by lazy { AndroidStorageController(this) }
     private val viewModel: GameViewModel by lazy {
         ViewModelProvider(this)[GameViewModel::class.java]
     }
@@ -42,7 +44,13 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         hideSystemBars()
         setContent {
-            CirclePopperApp(viewModel = viewModel, vibrationController = vibrationController, soundManager = soundManager, musicManager = musicManager)
+            CirclePopperApp(
+                viewModel = viewModel,
+                vibrationController = vibrationController,
+                soundController = soundController,
+                musicController = musicController,
+                storageController = storageController
+            )
         }
     }
 
@@ -52,14 +60,14 @@ class MainActivity : ComponentActivity() {
         hideSystemBars()
         viewModel.resumeGame()
         if (!viewModel.state.value.isPlaying && viewModel.state.value.settingsMenuMusic) {
-            musicManager.resumeMenuMusic()
+            musicController.resumeMenuMusic()
         }
     }
 
     override fun onPause() {
         super.onPause()
         Log.d("CirclePopper", "MainActivity.onPause")
-        musicManager.pauseMenuMusic()
+        musicController.pauseMenuMusic()
         viewModel.pauseGame()
     }
 

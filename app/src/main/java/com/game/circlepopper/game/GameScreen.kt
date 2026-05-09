@@ -6,6 +6,9 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import com.game.circlepopper.game.platform.MusicController
+import com.game.circlepopper.game.platform.SoundController
+import com.game.circlepopper.game.platform.StorageController
 import com.game.circlepopper.game.platform.VibrationController
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -70,28 +73,37 @@ import kotlinx.coroutines.isActive
 fun CirclePopperApp(
     viewModel: GameViewModel,
     vibrationController: VibrationController,
-    soundManager: SoundManager,
-    musicManager: MusicManager
+    soundController: SoundController,
+    musicController: MusicController,
+    storageController: StorageController
 ) {
     val state by viewModel.state.collectAsState()
 
     val context = LocalContext.current
 
+    LaunchedEffect(Unit) {
+        viewModel.setStorageController(storageController)
+    }
+
     LaunchedEffect(vibrationController) {
         viewModel.setVibrationController(vibrationController)
     }
 
-    LaunchedEffect(soundManager) {
-        viewModel.setSoundManager(soundManager)
+    LaunchedEffect(soundController) {
+        viewModel.setSoundController(soundController)
+    }
+
+    LaunchedEffect(musicController) {
+        viewModel.setMusicController(musicController)
     }
 
     LaunchedEffect(state.isPlaying, state.isGameOver, state.showHighscoreList, state.settingsMenuMusic) {
-        if (!state.isPlaying && state.settingsMenuMusic) musicManager.startMenuMusic()
-        else musicManager.stopMenuMusic()
+        if (!state.isPlaying && state.settingsMenuMusic) musicController.startMenuMusic()
+        else musicController.stopMenuMusic()
     }
 
     DisposableEffect(Unit) {
-        onDispose { musicManager.stopMenuMusic() }
+        onDispose { musicController.stopMenuMusic() }
     }
 
     DisposableEffect(context) {

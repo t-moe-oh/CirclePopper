@@ -1,24 +1,24 @@
-package com.game.circlepopper.game
+package com.game.circlepopper.game.platform
 
 import android.content.Context
 import android.media.MediaPlayer
 import com.game.circlepopper.R
 
-class MusicManager(private val appContext: Context) {
+class AndroidMusicController(private val ctx: Context) : MusicController {
 
     private var mediaPlayer: MediaPlayer? = null
 
-    fun startMenuMusic() {
+    override fun startMenuMusic() {
         if (mediaPlayer?.isPlaying == true) return
         mediaPlayer?.release()
-        mediaPlayer = MediaPlayer.create(appContext, R.raw.menu_music).apply {
+        mediaPlayer = MediaPlayer.create(ctx, R.raw.menu_music).apply {
             isLooping = true
             setVolume(0.4f, 0.4f)
             start()
         }
     }
 
-    fun stopMenuMusic() {
+    override fun stopMenuMusic() {
         mediaPlayer?.apply {
             if (isPlaying) stop()
             release()
@@ -26,11 +26,11 @@ class MusicManager(private val appContext: Context) {
         mediaPlayer = null
     }
 
-    fun pauseMenuMusic() {
+    override fun pauseMenuMusic() {
         mediaPlayer?.pause()
     }
 
-    fun resumeMenuMusic() {
+    override fun resumeMenuMusic() {
         if (mediaPlayer != null) {
             mediaPlayer?.start()
         } else {
