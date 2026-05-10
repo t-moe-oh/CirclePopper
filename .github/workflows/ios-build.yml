@@ -58,7 +58,8 @@ jobs:
             -framework shared \
             -framework UIKit \
             -o "$APP/CirclePopper" \
-            iosApp/iosApp/main.m
+            iosApp/iosApp/main.m \
+            iosApp/iosApp/SceneDelegate.m
 
           codesign -s - "$APP"
 

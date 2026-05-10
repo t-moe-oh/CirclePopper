@@ -1,21 +1,22 @@
 #import <UIKit/UIKit.h>
-@import shared;
 
 @interface AppDelegate : UIResponder <UIApplicationDelegate>
-@property (strong, nonatomic) UIWindow *window;
 @end
 
 @implementation AppDelegate
-- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-    self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
-    self.window.rootViewController = [SharedMainViewControllerKt MainViewController];
-    [self.window makeKeyAndVisible];
-    return YES;
+- (UISceneConfiguration *)application:(UIApplication *)application
+    configurationForConnectingSceneSession:(UISceneSession *)session
+    options:(UISceneConnectionOptions *)options {
+    UISceneConfiguration *config = [[UISceneConfiguration alloc]
+        initWithName:@"Default Configuration" sessionRole:session.role];
+    config.delegateClass = [SceneDelegate class];
+    return config;
 }
 @end
 
 int main(int argc, char * argv[]) {
     @autoreleasepool {
-        return UIApplicationMain(argc, argv, nil, NSStringFromClass([AppDelegate class]));
+        return UIApplicationMain(argc, argv, nil,
+            NSStringFromClass([AppDelegate class]));
     }
 }
