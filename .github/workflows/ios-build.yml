@@ -64,6 +64,11 @@ jobs:
             -o "$APP/CirclePopper" \
             iosApp/iosApp/main.m
 
+          echo "=== Executable load commands ==="
+          otool -l "$APP/CirclePopper" | grep -A 4 "LC_LOAD_DYLIB\|LC_RPATH"
+          echo "=== Framework install name ==="
+          otool -l "$APP/Frameworks/shared.framework/shared" | grep -A 2 "LC_ID_DYLIB"
+
           codesign -s - "$APP/Frameworks/shared.framework"
           codesign -s - "$APP"
 
