@@ -1,7 +1,6 @@
 package com.game.circlepopper.game.platform
 
-import kotlinx.cinterop.ExperimentalForeignApi
-import platform.Foundation.NSDate
+import platform.Foundation.CFAbsoluteTimeGetCurrent
 
-@OptIn(ExperimentalForeignApi::class)
-actual fun currentTimeMillis(): Long = (NSDate().timeIntervalSince1970 * 1000.0).toLong()
+actual fun currentTimeMillis(): Long =
+    ((CFAbsoluteTimeGetCurrent() + 978307200.0) * 1000.0).toLong()

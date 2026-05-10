@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import com.game.circlepopper.game.GameViewModel
 import kotlinx.cinterop.ExperimentalForeignApi
-import platform.CoreMotion.CMDeviceMotion
+import kotlinx.cinterop.useContents
 import platform.CoreMotion.CMMotionManager
 import platform.Foundation.NSOperationQueue
 
@@ -21,10 +21,9 @@ actual fun SensorEffect(viewModel: GameViewModel) {
                 toQueue = NSOperationQueue.mainQueue,
                 withHandler = { motion, _ ->
                     if (motion != null) {
-                        viewModel.setTilt(
-                            motion.gravity.x.toFloat(),
-                            motion.gravity.y.toFloat()
-                        )
+                        motion.gravity.useContents {
+                            viewModel.setTilt(x.toFloat(), y.toFloat())
+                        }
                     }
                 }
             )
