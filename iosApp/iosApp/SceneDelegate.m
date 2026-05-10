@@ -1,4 +1,4 @@
-#import <UIKit/UIKit.h>
+#import "SceneDelegate.h"
 @import shared;
 
 // iPadOS 26+ types (define manually for SDK compatibility)
@@ -9,10 +9,6 @@ typedef NS_ENUM(NSInteger, UIWindowSceneWindowingControlStyle) {
     UIWindowSceneWindowingControlStyleUnified = 2
 };
 #endif
-
-@interface SceneDelegate : UIResponder <UIWindowSceneDelegate>
-@property (strong, nonatomic) UIWindow *window;
-@end
 
 @implementation SceneDelegate
 
