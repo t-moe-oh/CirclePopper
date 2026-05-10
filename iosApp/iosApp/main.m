@@ -1,5 +1,5 @@
 #import <UIKit/UIKit.h>
-#import <shared/shared.h>
+@import shared;
 
 @interface AppDelegate : UIResponder <UIApplicationDelegate>
 @property (strong, nonatomic) UIWindow *window;
