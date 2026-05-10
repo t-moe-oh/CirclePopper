@@ -1,5 +1,4 @@
 #import <UIKit/UIKit.h>
-@import shared;
 
 @interface AppDelegate : UIResponder <UIApplicationDelegate>
 @property (strong, nonatomic) UIWindow *window;
@@ -8,7 +7,9 @@
 @implementation AppDelegate
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
-    self.window.rootViewController = [SharedMainViewControllerKt MainViewController];
+    UIViewController *vc = [[UIViewController alloc] init];
+    vc.view.backgroundColor = [UIColor redColor];
+    self.window.rootViewController = vc;
     [self.window makeKeyAndVisible];
     return YES;
 }
