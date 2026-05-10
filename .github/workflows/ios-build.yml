@@ -46,13 +46,6 @@ jobs:
           FW="app/build/bin/iosArm64/debugFramework/shared.framework"
           APP="build/CirclePopper.app"
 
-          echo "=== Framework structure ==="
-          ls -la "$FW/Headers/"
-          echo "=== Generated headers ==="
-          cat "$FW/Headers/"*
-          echo "=== Modulemap ==="
-          cat "$FW/Modules/module.modulemap"
-
           mkdir -p "$APP/Frameworks"
           cp -r "$FW" "$APP/Frameworks/"
           cp iosApp/iosApp/Info.plist "$APP/"
