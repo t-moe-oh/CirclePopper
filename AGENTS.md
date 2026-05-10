@@ -2,6 +2,14 @@
 
 ## Build
 
+### Android
+
+```sh
+bash tools/build_for_android.sh
+```
+
+Or manually:
+
 ```sh
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk
 export ANDROID_HOME=/opt/android-sdk
@@ -9,8 +17,24 @@ export ANDROID_HOME=/opt/android-sdk
 ./gradlew :androidApp:assembleDebug     # debug APK
 ```
 
-JDK 25 is installed but Gradle 9.5.0 + AGP 9.2.1 have intermittent aapt2 compatibility issues with it.
-Use JDK 21 for reliable builds.
+JDK 25 is installed but has intermittent aapt2 compatibility issues. Use JDK 21 for reliable builds.
+
+### iOS (via GitHub Actions)
+
+```sh
+bash tools/build_for_ios_github.sh
+```
+
+This pushes code and triggers the `ios-build.yml` workflow on a macOS GitHub runner.
+The IPA artifact is downloaded automatically after the build completes.
+
+### iOS (on macOS directly)
+
+```sh
+bash tools/build_for_ios.sh
+```
+
+Requires macOS with Xcode installed. Then open `iosApp/` in Xcode and archive.
 
 ## Project structure
 
