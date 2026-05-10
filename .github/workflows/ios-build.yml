@@ -50,6 +50,9 @@ jobs:
           cp -r "$FW" "$APP/Frameworks/"
           cp iosApp/iosApp/Info.plist "$APP/"
 
+          # Copy app icon
+          cp androidApp/src/main/res/mipmap-xxxhdpi/ic_launcher.png "$APP/AppIcon60x60.png"
+
           xcrun -sdk iphoneos clang \
             -target arm64-apple-ios15.0 \
             -fobjc-arc \
@@ -57,6 +60,7 @@ jobs:
             -F "$APP/Frameworks" \
             -framework shared \
             -framework UIKit \
+            -Xlinker -rpath -Xlinker @executable_path/Frameworks \
             -o "$APP/CirclePopper" \
             iosApp/iosApp/main.m
 
