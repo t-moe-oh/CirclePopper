@@ -41,21 +41,30 @@ jobs:
             -Pkotlin.native.cacheKind.iosArm64=none \
             --no-daemon
 
-      - name: Set up Xcode project
+      - name: Build IPA
         run: |
-          mkdir -p iosApp/build
-          # Copy framework to Xcode-friendly location
-          cp -r app/build/bin/iosArm64/debugFramework/shared.framework \
-            iosApp/build/
+          FW="app/build/bin/iosArm64/debugFramework/shared.framework"
+          APP="build/CirclePopper.app"
 
-      - name: Build and sign IPA
-        run: |
-          cd iosApp
-          # Create app bundle structure
+          mkdir -p "$APP/Frameworks"
+          cp -r "$FW" "$APP/Frameworks/"
+          cp iosApp/iosApp/Info.plist "$APP/"
+
+          xcrun -sdk iphoneos clang \
+            -target arm64-apple-ios15.0 \
+            -fobjc-arc \
+            -F "$APP/Frameworks" \
+            -framework shared \
+            -framework UIKit \
+            -o "$APP/CirclePopper" \
+            iosApp/iosApp/main.m
+
+          codesign -s - "$APP/Frameworks/shared.framework"
+          codesign -s - "$APP"
+
           mkdir -p build/Payload
-          cp -r build/shared.framework build/Payload/
-          # Create minimal IPA (placeholder — real Xcode project needed for full IPA)
-          cd build && zip -r CirclePopper.ipa Payload/
+          cp -r "$APP" build/Payload/
+          cd build && zip -r CirclePopper.ipa Payload/ -x "*.DS_Store"
 
       - name: Upload IPA
         uses: actions/upload-artifact@v4
