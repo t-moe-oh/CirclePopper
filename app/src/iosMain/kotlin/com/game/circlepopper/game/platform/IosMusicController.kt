@@ -1,15 +1,16 @@
 package com.game.circlepopper.game.platform
 
+import kotlinx.cinterop.ExperimentalForeignApi
 import platform.AVFAudio.AVAudioPlayer
 import platform.Foundation.NSBundle
-import platform.Foundation.NSURL
 
 class IosMusicController : MusicController {
 
     private var mediaPlayer: AVAudioPlayer? = null
 
+    @OptIn(ExperimentalForeignApi::class)
     override fun startMenuMusic() {
-        if (mediaPlayer?.isPlaying == true) return
+        if (mediaPlayer?.isPlaying() == true) return
         val url = NSBundle.mainBundle.URLForResource("menu_music", "ogg") ?: return
         mediaPlayer = AVAudioPlayer(url, null).apply {
             numberOfLoops = -1

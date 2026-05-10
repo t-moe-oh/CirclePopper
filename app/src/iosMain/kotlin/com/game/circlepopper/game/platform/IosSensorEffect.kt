@@ -15,9 +15,9 @@ actual fun SensorEffect(viewModel: GameViewModel) {
 
     DisposableEffect(Unit) {
         motionManager.deviceMotionUpdateInterval = 0.1
-        if (motionManager.isDeviceMotionAvailable) {
+        if (motionManager.isDeviceMotionAvailable()) {
             motionManager.startDeviceMotionUpdatesUsingReferenceFrame(
-                referenceFrame = 0,
+                referenceFrame = 0UL,
                 toQueue = NSOperationQueue.mainQueue,
                 withHandler = { motion, _ ->
                     if (motion != null) {
