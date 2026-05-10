@@ -1,5 +1,7 @@
 #import <UIKit/UIKit.h>
 
+@class SceneDelegate;
+
 @interface AppDelegate : UIResponder <UIApplicationDelegate>
 @end
 
