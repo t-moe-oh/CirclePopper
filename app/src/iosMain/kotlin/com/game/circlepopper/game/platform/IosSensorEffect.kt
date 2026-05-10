@@ -3,9 +3,12 @@ package com.game.circlepopper.game.platform
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import com.game.circlepopper.game.GameViewModel
+import kotlinx.cinterop.ExperimentalForeignApi
+import platform.CoreMotion.CMDeviceMotion
 import platform.CoreMotion.CMMotionManager
 import platform.Foundation.NSOperationQueue
 
+@OptIn(ExperimentalForeignApi::class)
 @Composable
 actual fun SensorEffect(viewModel: GameViewModel) {
     val motionManager = CMMotionManager()

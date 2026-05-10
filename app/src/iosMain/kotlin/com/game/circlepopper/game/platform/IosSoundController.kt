@@ -2,8 +2,6 @@ package com.game.circlepopper.game.platform
 
 import kotlinx.cinterop.ExperimentalForeignApi
 import platform.AVFAudio.AVAudioPlayer
-import platform.Foundation.NSError
-import platform.Foundation.NSURL
 import platform.Foundation.NSBundle
 
 class IosSoundController : SoundController {
@@ -13,6 +11,7 @@ class IosSoundController : SoundController {
     private var boopPlayer: AVAudioPlayer? = null
     private var boomPlayer: AVAudioPlayer? = null
 
+    @OptIn(ExperimentalForeignApi::class)
     private fun loadSound(name: String, ext: String = "wav"): AVAudioPlayer? {
         val url = NSBundle.mainBundle.URLForResource(name, ext) ?: return null
         return AVAudioPlayer(url, null)
