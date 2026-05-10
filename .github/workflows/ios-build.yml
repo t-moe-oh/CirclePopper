@@ -46,30 +46,20 @@ jobs:
           FW="app/build/bin/iosArm64/debugFramework/shared.framework"
           APP="build/CirclePopper.app"
 
-          mkdir -p "$APP/Frameworks"
-          cp -r "$FW" "$APP/Frameworks/"
+          mkdir -p "$APP"
           cp iosApp/iosApp/Info.plist "$APP/"
-
-          # Copy app icon
           cp androidApp/src/main/res/mipmap-xxxhdpi/ic_launcher.png "$APP/AppIcon60x60.png"
 
           xcrun -sdk iphoneos clang \
             -target arm64-apple-ios15.0 \
             -fobjc-arc \
             -fmodules \
-            -F "$APP/Frameworks" \
+            -F "$(dirname "$FW")" \
             -framework shared \
             -framework UIKit \
-            -Xlinker -rpath -Xlinker @executable_path/Frameworks \
             -o "$APP/CirclePopper" \
             iosApp/iosApp/main.m
 
-          echo "=== Executable load commands ==="
-          otool -l "$APP/CirclePopper" | grep -A 4 "LC_LOAD_DYLIB\|LC_RPATH"
-          echo "=== Framework install name ==="
-          otool -l "$APP/Frameworks/shared.framework/shared" | grep -A 2 "LC_ID_DYLIB"
-
-          codesign -s - "$APP/Frameworks/shared.framework"
           codesign -s - "$APP"
 
           mkdir -p build/Payload
